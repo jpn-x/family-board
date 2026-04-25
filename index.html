@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>みんなの近況報告</title>
+  <!-- OGP（LINE・SNSシェア時のプレビュー） -->
+  <meta property="og:title"       content="みんなの近況報告">
+  <meta property="og:description" content="直樹・奈々・大阪の近況動画をまとめてチェック！">
+  <meta property="og:image"       content="https://jpn-x.github.io/family-board/icon.png">
+  <meta property="og:url"         content="https://jpn-x.github.io/family-board/">
+  <meta property="og:type"        content="website">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="manifest.json">
@@ -718,7 +724,34 @@
     });
   });
 
-  /* ===== Pull to Refresh ===== */
+  /* ===== ヘッダー下スワイプ → F5リロード ===== */
+  (function() {
+    const header = document.getElementById('app').querySelector('header');
+    let startY = 0, triggered = false;
+
+    header.addEventListener('touchstart', e => {
+      startY = e.touches[0].clientY;
+      triggered = false;
+    }, { passive: true });
+
+    header.addEventListener('touchmove', e => {
+      const dy = e.touches[0].clientY - startY;
+      if (dy > 60 && !triggered) {
+        triggered = true;
+        header.style.opacity = '0.6';
+      }
+    }, { passive: true });
+
+    header.addEventListener('touchend', e => {
+      const dy = e.changedTouches[0].clientY - startY;
+      header.style.opacity = '';
+      if (dy > 60) {
+        window.location.reload(true); // キャッシュ無視のF5相当
+      }
+    }, { passive: true });
+  })();
+
+  /* ===== Pull to Refresh（コンテンツエリア） ===== */
   (function() {
     const content   = document.getElementById('content');
     const indicator = document.getElementById('pull-indicator');
