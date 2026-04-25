@@ -11,9 +11,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --orange:    #e07b54;
-      --orange-dk: #c96840;
-      --orange-lt: #fff0e8;
+      --orange:    #f18d00;
+      --orange-dk: #d47d00;
+      --orange-lt: #fff4e0;
       --red:       #e03b3b;
       --bg:        #fdf6ee;
       --card:      #ffffff;
@@ -321,9 +321,10 @@
       #home-btn    { font-size: 17px; padding: 9px 24px; }
       #header-hint { font-size: 14px; }
 
-      #tabs { display: none; }
+      /* スマホでも上タブを表示 */
+      #tabs { display: flex; }
 
-      #content { padding: 12px 12px calc(var(--tab-h) + 12px); }
+      #content { padding: 12px 12px 16px; }
 
       #pull-indicator { display: block; }
 
@@ -335,17 +336,7 @@
       .card-date    { font-size: 16px; }
       .card-caption { font-size: 19px; }
 
-      /* ボトムナビ */
-      #bottom-nav {
-        display: flex;
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        height: var(--tab-h);
-        background: white;
-        border-top: 2px solid #e8cbb0;
-        z-index: 100;
-        padding-bottom: env(safe-area-inset-bottom);
-      }
+      #bottom-nav { display: none; }
 
       .bnav-btn {
         flex: 1;
