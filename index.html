@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>家族ボード</title>
+  <title>みんなの近況報告</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="manifest.json">
@@ -18,9 +18,9 @@
       --bg:        #fdf6ee;
       --card:      #ffffff;
       --text:      #333;
-      --sub:       #888;
+      --sub:       #777;
       --radius:    16px;
-      --tab-h:     64px;  /* スマホのボトムタブ高さ */
+      --tab-h:     70px;
     }
 
     html, body {
@@ -37,16 +37,37 @@
       height: 100vh;
     }
 
-    /* ====== ヘッダー ====== */
+    /* ====== ヘッダー（ボタン＋案内） ====== */
     header {
       flex-shrink: 0;
       background: var(--orange);
-      color: white;
+      padding: 10px 12px 6px;
       text-align: center;
-      padding: 12px 0 10px;
-      font-size: 22px;
+    }
+
+    #home-btn {
+      display: inline-block;
+      background: white;
+      color: var(--orange);
+      border: none;
+      border-radius: 50px;
+      padding: 10px 32px;
+      font-size: 20px;
       font-weight: bold;
-      letter-spacing: 2px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    #home-btn:active { transform: scale(0.97); background: var(--orange-lt); }
+
+    #header-hint {
+      color: rgba(255,255,255,0.95);
+      font-size: 15px;
+      font-weight: bold;
+      margin-top: 5px;
+      letter-spacing: 0.5px;
     }
 
     /* ====== タブ（PC・タブレット：上部） ====== */
@@ -59,8 +80,8 @@
 
     .tab {
       flex: 1;
-      padding: 12px 8px;
-      font-size: 18px;
+      padding: 12px 4px;
+      font-size: 16px;
       font-weight: bold;
       text-align: center;
       cursor: pointer;
@@ -83,7 +104,7 @@
 
     .tab .tab-badge {
       position: absolute;
-      top: 6px; right: 14%;
+      top: 5px; right: 8%;
       background: var(--red);
       color: white;
       font-size: 10px;
@@ -93,7 +114,7 @@
     }
 
     .tab .tab-avatar { font-size: 22px; display: block; margin-bottom: 2px; }
-    .tab .tab-name   { font-size: 15px; display: block; }
+    .tab .tab-name   { font-size: 14px; display: block; }
 
     /* ====== コンテンツ ====== */
     #content {
@@ -105,6 +126,15 @@
 
     #content::-webkit-scrollbar       { width: 4px; }
     #content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+    /* ====== Pull to refresh インジケーター ====== */
+    #pull-indicator {
+      display: none;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 15px;
+      color: var(--sub);
+    }
 
     /* ====== 空状態 ====== */
     #empty {
@@ -118,9 +148,9 @@
     }
 
     #empty .icon { font-size: 56px; }
-    #empty p     { font-size: 18px; }
+    #empty p     { font-size: 20px; }
 
-    /* ====== グリッド（デフォルト3列：PC・タブレット横） ====== */
+    /* ====== グリッド（3列デフォルト） ====== */
     #grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -160,11 +190,11 @@
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 48px; height: 48px;
+      width: 52px; height: 52px;
       background: rgba(0,0,0,0.55);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
       color: white;
       pointer-events: none;
       opacity: 0;
@@ -173,31 +203,21 @@
 
     .video-card:hover .play-icon { opacity: 1; }
 
-    .short-badge {
+    .short-badge, .new-badge, .member-badge {
       position: absolute;
-      top: 7px; left: 7px;
-      background: rgba(0,0,0,0.65);
-      color: white;
       font-size: 10px;
       font-weight: bold;
-      border-radius: 5px;
-      padding: 2px 6px;
+      border-radius: 6px;
+      padding: 2px 7px;
     }
 
-    .new-badge {
-      position: absolute;
-      top: 7px; right: 7px;
-      background: var(--red);
-      color: white;
-      font-size: 10px;
-      font-weight: bold;
-      border-radius: 20px;
-      padding: 2px 8px;
-    }
+    .short-badge  { top: 7px; left: 7px; background: rgba(0,0,0,0.65); color: white; }
+    .new-badge    { top: 7px; right: 7px; background: var(--red); color: white; border-radius: 20px; }
+    .member-badge { bottom: 7px; left: 7px; background: rgba(224,123,84,0.9); color: white; }
 
-    .card-info    { padding: 10px 12px 12px; }
-    .card-date    { font-size: 13px; color: var(--sub); margin-bottom: 4px; }
-    .card-caption { font-size: 15px; font-weight: bold; line-height: 1.4; }
+    .card-info    { padding: 10px 14px 14px; }
+    .card-date    { font-size: 15px; color: var(--sub); margin-bottom: 5px; }
+    .card-caption { font-size: 18px; font-weight: bold; line-height: 1.4; }
 
     /* ====== もっと見るボタン ====== */
     #load-more-area {
@@ -211,8 +231,8 @@
       border: 3px solid var(--orange);
       color: var(--orange);
       border-radius: 50px;
-      padding: 12px 40px;
-      font-size: 17px;
+      padding: 14px 44px;
+      font-size: 18px;
       font-weight: bold;
       cursor: pointer;
       transition: background 0.15s;
@@ -225,7 +245,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.88);
       z-index: 200;
       align-items: center;
       justify-content: center;
@@ -236,11 +256,12 @@
     #overlay-bg {
       position: absolute;
       inset: 0;
-      z-index: -1;
+      z-index: 0;
     }
 
     .overlay-inner {
       position: relative;
+      z-index: 1;
       width: 88vw;
       max-width: 860px;
     }
@@ -273,46 +294,46 @@
       border: none;
     }
 
-    .overlay-meta   { color: white; padding: 10px 4px 0; }
-    .ov-date        { font-size: 13px; color: #aaa; margin-bottom: 3px; }
-    .ov-caption     { font-size: 18px; font-weight: bold; }
+    .overlay-meta { color: white; padding: 10px 4px 0; }
+    .ov-date      { font-size: 14px; color: #aaa; margin-bottom: 3px; }
+    .ov-caption   { font-size: 20px; font-weight: bold; }
 
     #close-btn {
       position: absolute;
-      top: -42px; right: 0;
-      background: none;
-      border: none;
+      top: -46px; right: 0;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 50px;
       color: white;
-      font-size: 32px;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
-      line-height: 1;
-      padding: 4px 8px;
+      padding: 6px 20px;
+      letter-spacing: 1px;
     }
 
     /* ============================================================
-       スマホ（〜599px）: ボトムナビ＋1列
+       スマホ（〜599px）
     ============================================================ */
     @media (max-width: 599px) {
-      html, body { overflow: hidden; }
+      header { padding: 10px 12px 8px; }
 
-      header { font-size: 18px; padding: 10px 0 8px; }
+      #home-btn    { font-size: 17px; padding: 9px 24px; }
+      #header-hint { font-size: 14px; }
 
-      /* タブを隠す（ボトムナビに移動） */
       #tabs { display: none; }
 
-      /* コンテンツの下にボトムナビ分の余白 */
-      #content {
-        padding: 14px 12px calc(var(--tab-h) + 14px);
-      }
+      #content { padding: 12px 12px calc(var(--tab-h) + 12px); }
 
-      /* 1列グリッド */
+      #pull-indicator { display: block; }
+
       #grid {
         grid-template-columns: 1fr;
         gap: 12px;
       }
 
-      .card-date    { font-size: 14px; }
-      .card-caption { font-size: 16px; }
+      .card-date    { font-size: 16px; }
+      .card-caption { font-size: 19px; }
 
       /* ボトムナビ */
       #bottom-nav {
@@ -323,6 +344,7 @@
         background: white;
         border-top: 2px solid #e8cbb0;
         z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom);
       }
 
       .bnav-btn {
@@ -340,16 +362,15 @@
       }
 
       .bnav-btn:active { background: var(--orange-lt); }
-
       .bnav-btn.active { background: var(--orange-lt); }
 
-      .bnav-btn .bnav-avatar { font-size: 24px; }
-      .bnav-btn .bnav-name   { font-size: 12px; font-weight: bold; color: var(--orange); margin-top: 1px; }
+      .bnav-btn .bnav-avatar { font-size: 22px; }
+      .bnav-btn .bnav-name   { font-size: 11px; font-weight: bold; color: var(--orange); margin-top: 2px; }
       .bnav-btn:not(.active) .bnav-name { color: #b07050; }
 
       .bnav-badge {
         position: absolute;
-        top: 4px; right: 18%;
+        top: 3px; right: 12%;
         background: var(--red);
         color: white;
         font-size: 9px;
@@ -358,13 +379,13 @@
         padding: 1px 5px;
       }
 
-      /* スマホのオーバーレイ: 下からスライド風・全幅 */
+      /* スマホのオーバーレイ: 下から */
       #overlay { align-items: flex-end; }
 
       .overlay-inner {
         width: 100vw;
         max-width: 100vw;
-        border-radius: 16px 16px 0 0;
+        border-radius: 20px 20px 0 0;
         overflow: hidden;
         background: #111;
         padding-bottom: env(safe-area-inset-bottom);
@@ -376,63 +397,60 @@
       }
 
       .overlay-inner.short .embed-wrap {
-        padding-bottom: 177.78%; /* 9:16 */
+        padding-bottom: 177.78%;
         height: 0;
         width: 100%;
-        max-height: 80vh;
       }
 
       .embed-wrap { border-radius: 0; }
 
-      .overlay-meta { padding: 12px 16px 16px; }
-      .ov-caption   { font-size: 16px; }
+      .overlay-meta { padding: 12px 16px 8px; }
+      .ov-caption   { font-size: 18px; }
 
+      /* スマホ閉じるボタン：常に目立つ位置に固定 */
       #close-btn {
         position: static;
         display: block;
-        text-align: right;
-        padding: 10px 16px 4px;
-        font-size: 28px;
-        color: #ccc;
-        background: #111;
         width: 100%;
+        background: #222;
+        border: none;
+        border-radius: 0;
+        text-align: center;
+        padding: 16px;
+        font-size: 18px;
+        font-weight: bold;
+        color: white;
+        letter-spacing: 2px;
       }
     }
 
     /* ============================================================
-       タブレット縦（600〜1023px）: 上タブ＋2列
+       タブレット縦（600〜1023px）
     ============================================================ */
     @media (min-width: 600px) and (max-width: 1023px) {
       #bottom-nav { display: none; }
+      #grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .card-caption { font-size: 17px; }
+    }
+
+    /* ============================================================
+       PC・タブレット横（1024px〜）
+    ============================================================ */
+    @media (min-width: 1024px) {
+      #bottom-nav { display: none; }
+
+      #home-btn    { font-size: 22px; padding: 12px 40px; }
+      #header-hint { font-size: 17px; margin-top: 6px; }
 
       .tab .tab-avatar { font-size: 26px; }
       .tab .tab-name   { font-size: 16px; }
       .tab { padding: 14px 8px; }
 
-      #grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-
-      .card-caption { font-size: 16px; }
-    }
-
-    /* ============================================================
-       PC・タブレット横（1024px〜）: 上タブ＋3列（デフォルト）
-    ============================================================ */
-    @media (min-width: 1024px) {
-      #bottom-nav { display: none; }
-
-      header { font-size: 28px; letter-spacing: 3px; padding: 14px 0 10px; }
-
-      .tab .tab-avatar { font-size: 28px; }
-      .tab .tab-name   { font-size: 17px; }
-      .tab { padding: 16px 8px; }
-
       #content { padding: 24px 32px 16px; }
-
       #grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
 
-      .card-caption { font-size: 17px; }
-
-      .thumb-wrap .play-icon { width: 54px; height: 54px; font-size: 22px; }
+      .card-date    { font-size: 15px; }
+      .card-caption { font-size: 18px; }
     }
   </style>
 </head>
@@ -440,30 +458,34 @@
 
 <div id="app">
 
-  <header>👨‍👩‍👧‍👦 家族ボード</header>
+  <!-- ヘッダー -->
+  <header>
+    <button id="home-btn" onclick="goHome()">📋 みんなの近況報告</button>
+    <p id="header-hint">↑ を押すと最初に戻るよ！</p>
+  </header>
 
   <!-- 上タブ（タブレット・PC） -->
   <div id="tabs">
-    <button class="tab active" id="tab-musuko" onclick="selectMember('musuko')">
-      <span class="tab-avatar">👨</span><span class="tab-name">息子</span>
-      <span class="tab-badge" id="badge-musuko" style="display:none">新着</span>
+    <button class="tab active" id="tab-all"   onclick="selectMember('all')">
+      <span class="tab-avatar">👀</span><span class="tab-name">全部表示</span>
     </button>
-    <button class="tab" id="tab-musume" onclick="selectMember('musume')">
-      <span class="tab-avatar">👩</span><span class="tab-name">娘</span>
-      <span class="tab-badge" id="badge-musume" style="display:none">新着</span>
+    <button class="tab" id="tab-naoki" onclick="selectMember('naoki')">
+      <span class="tab-avatar">👨</span><span class="tab-name">直樹</span>
+      <span class="tab-badge" id="badge-naoki" style="display:none">新着</span>
     </button>
-    <button class="tab" id="tab-mago1" onclick="selectMember('mago1')">
-      <span class="tab-avatar">👦</span><span class="tab-name">孫１</span>
-      <span class="tab-badge" id="badge-mago1" style="display:none">新着</span>
+    <button class="tab" id="tab-nana" onclick="selectMember('nana')">
+      <span class="tab-avatar">👩</span><span class="tab-name">奈々</span>
+      <span class="tab-badge" id="badge-nana" style="display:none">新着</span>
     </button>
-    <button class="tab" id="tab-mago2" onclick="selectMember('mago2')">
-      <span class="tab-avatar">👧</span><span class="tab-name">孫２</span>
-      <span class="tab-badge" id="badge-mago2" style="display:none">新着</span>
+    <button class="tab" id="tab-osaka" onclick="selectMember('osaka')">
+      <span class="tab-avatar">🏯</span><span class="tab-name">大阪</span>
+      <span class="tab-badge" id="badge-osaka" style="display:none">新着</span>
     </button>
   </div>
 
   <!-- コンテンツ -->
   <div id="content">
+    <div id="pull-indicator">↓ 引っ張って更新</div>
     <div id="empty"><div class="icon">🎬</div><p>動画はまだありません</p></div>
     <div id="grid"></div>
     <div id="load-more-area">
@@ -473,23 +495,22 @@
 
 </div>
 
-<!-- ボトムナビ（スマホのみ表示） -->
+<!-- ボトムナビ（スマホのみ） -->
 <div id="bottom-nav">
-  <button class="bnav-btn active" id="bnav-musuko" onclick="selectMember('musuko')">
-    <span class="bnav-badge" id="bnav-badge-musuko" style="display:none">新</span>
-    <span class="bnav-avatar">👨</span><span class="bnav-name">息子</span>
+  <button class="bnav-btn active" id="bnav-all" onclick="selectMember('all')">
+    <span class="bnav-avatar">👀</span><span class="bnav-name">全部</span>
   </button>
-  <button class="bnav-btn" id="bnav-musume" onclick="selectMember('musume')">
-    <span class="bnav-badge" id="bnav-badge-musume" style="display:none">新</span>
-    <span class="bnav-avatar">👩</span><span class="bnav-name">娘</span>
+  <button class="bnav-btn" id="bnav-naoki" onclick="selectMember('naoki')">
+    <span class="bnav-badge" id="bnav-badge-naoki" style="display:none">新</span>
+    <span class="bnav-avatar">👨</span><span class="bnav-name">直樹</span>
   </button>
-  <button class="bnav-btn" id="bnav-mago1" onclick="selectMember('mago1')">
-    <span class="bnav-badge" id="bnav-badge-mago1" style="display:none">新</span>
-    <span class="bnav-avatar">👦</span><span class="bnav-name">孫１</span>
+  <button class="bnav-btn" id="bnav-nana" onclick="selectMember('nana')">
+    <span class="bnav-badge" id="bnav-badge-nana" style="display:none">新</span>
+    <span class="bnav-avatar">👩</span><span class="bnav-name">奈々</span>
   </button>
-  <button class="bnav-btn" id="bnav-mago2" onclick="selectMember('mago2')">
-    <span class="bnav-badge" id="bnav-badge-mago2" style="display:none">新</span>
-    <span class="bnav-avatar">👧</span><span class="bnav-name">孫２</span>
+  <button class="bnav-btn" id="bnav-osaka" onclick="selectMember('osaka')">
+    <span class="bnav-badge" id="bnav-badge-osaka" style="display:none">新</span>
+    <span class="bnav-avatar">🏯</span><span class="bnav-name">大阪</span>
   </button>
 </div>
 
@@ -497,47 +518,51 @@
 <div id="overlay">
   <div id="overlay-bg" onclick="closeOverlay()"></div>
   <div class="overlay-inner" id="overlay-inner">
-    <button id="close-btn" onclick="closeOverlay()">✕</button>
+    <button id="close-btn" onclick="closeOverlay()">✕ 閉じる</button>
     <div class="embed-wrap">
-      <iframe id="player" allowfullscreen></iframe>
+      <iframe id="player" allowfullscreen allow="autoplay; fullscreen"></iframe>
     </div>
     <div class="overlay-meta">
-      <div class="ov-date" id="ov-date"></div>
+      <div class="ov-date"    id="ov-date"></div>
       <div class="ov-caption" id="ov-caption"></div>
     </div>
   </div>
 </div>
 
 <script>
+  /* ===== 設定 ===== */
   const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gbFsjn4STShe0VoNh7OtYcfD-VMZTIoe8xdaXD7XnGw/export?format=csv&gid=327167513';
   const PAGE_SIZE = 6;
   const NEW_DAYS  = 3;
 
   const MEMBERS = {
-    musuko: { label: '息子', nameKeys: ['息子', 'musuko'] },
-    musume: { label: '娘',   nameKeys: ['娘',   'musume'] },
-    mago1:  { label: '孫１', nameKeys: ['孫1',  '孫１', 'mago1'] },
-    mago2:  { label: '孫２', nameKeys: ['孫2',  '孫２', 'mago2'] },
+    naoki: { label: '直樹', nameKeys: ['直樹', '息子', 'naoki'] },
+    nana:  { label: '奈々', nameKeys: ['奈々', '娘',   'nana']  },
+    osaka: { label: '大阪', nameKeys: ['大阪', '孫1',  '孫１', 'osaka'] },
   };
 
   const SAMPLE = [
-    { member:'musuko', date:'2026-04-25', caption:'防草シート貼るぜ！', url:'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
+    { member:'naoki', date:'2026-04-25', caption:'防草シート貼るぜ！', url:'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
   ];
 
+  /* ===== ユーティリティ ===== */
   function getVideoId(url) {
     const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^?&\s]+)/);
     return m ? m[1] : null;
   }
-
   function isShort(url) { return /youtube\.com\/shorts\//.test(url); }
   function thumbUrl(id) { return `https://img.youtube.com/vi/${id}/mqdefault.jpg`; }
-  function embedUrl(id) { return `https://www.youtube.com/embed/${id}?autoplay=1`; }
+  function embedUrl(id) { return `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1`; }
   function isNew(d)     { return (Date.now() - new Date(d)) < NEW_DAYS * 86400000; }
 
-  let allData = [], currentMember = 'musuko', shownCount = 0;
+  /* ===== データ ===== */
+  let allData = [], currentMember = 'all', shownCount = 0;
 
   function getMemberVideos(id) {
-    return allData.filter(v => v.member === id).sort((a,b) => b.date.localeCompare(a.date));
+    const base = id === 'all'
+      ? [...allData]
+      : allData.filter(v => v.member === id);
+    return base.sort((a, b) => b.date.localeCompare(a.date));
   }
 
   function parseCSV(text) {
@@ -546,9 +571,9 @@
     return lines.map(line => {
       const cols = line.match(/(".*?"|[^,\n]+)(?=,|$)/g) || [];
       const c = s => (s||'').replace(/^"|"$/g,'').trim();
-      const date = c(cols[0]).substring(0,10).replace(/\//g,'-');
+      const date    = c(cols[0]).substring(0,10).replace(/\//g,'-');
       const nameRaw = c(cols[1]);
-      const url = c(cols[2]);
+      const url     = c(cols[2]);
       const caption = c(cols[3]) || '';
       let member = null;
       for (const [id, cfg] of Object.entries(MEMBERS)) {
@@ -559,68 +584,79 @@
     }).filter(Boolean);
   }
 
+  /* ===== 初期化・更新 ===== */
   async function init() {
     try {
-      const res = await fetch(SHEET_CSV_URL);
+      const res  = await fetch(SHEET_CSV_URL + '&t=' + Date.now()); // キャッシュ回避
       const text = await res.text();
       allData = parseCSV(text);
       if (!allData.length) allData = SAMPLE;
     } catch(e) {
       allData = SAMPLE;
     }
-
-    for (const id of Object.keys(MEMBERS)) {
-      const hasNew = getMemberVideos(id).some(v => isNew(v.date));
-      const show = hasNew ? '' : 'none';
-      const b1 = document.getElementById('badge-' + id);
-      const b2 = document.getElementById('bnav-badge-' + id);
-      if (b1) b1.style.display = show;
-      if (b2) b2.style.display = show;
-    }
-
-    selectMember('musuko');
+    updateBadges();
+    renderGrid();
   }
 
-  function selectMember(id) {
-    // 上タブ
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const tab = document.getElementById('tab-' + id);
-    if (tab) tab.classList.add('active');
+  function updateBadges() {
+    for (const id of Object.keys(MEMBERS)) {
+      const hasNew = getMemberVideos(id).some(v => isNew(v.date));
+      const show   = hasNew ? '' : 'none';
+      ['badge-', 'bnav-badge-'].forEach(prefix => {
+        const el = document.getElementById(prefix + id);
+        if (el) el.style.display = show;
+      });
+    }
+  }
 
-    // ボトムナビ
+  /* ===== ホームへ戻る ===== */
+  function goHome() {
+    selectMember('all');
+    document.getElementById('content').scrollTop = 0;
+  }
+
+  /* ===== タブ切り替え ===== */
+  function selectMember(id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+
+    const tab  = document.getElementById('tab-'  + id);
     const bnav = document.getElementById('bnav-' + id);
+    if (tab)  tab.classList.add('active');
     if (bnav) bnav.classList.add('active');
 
     currentMember = id;
-    shownCount = 0;
+    shownCount    = 0;
     document.getElementById('grid').innerHTML = '';
     document.getElementById('content').scrollTop = 0;
     renderGrid();
   }
 
+  /* ===== グリッド描画 ===== */
   function renderGrid() {
-    const videos = getMemberVideos(currentMember);
-    const grid   = document.getElementById('grid');
-    const empty  = document.getElementById('empty');
+    const videos   = getMemberVideos(currentMember);
+    const grid     = document.getElementById('grid');
+    const empty    = document.getElementById('empty');
     const moreArea = document.getElementById('load-more-area');
 
     if (!videos.length) {
       empty.style.display = 'flex';
-      grid.style.display = 'none';
+      grid.style.display  = 'none';
       moreArea.style.display = 'none';
       return;
     }
 
     empty.style.display = 'none';
-    grid.style.display = 'grid';
+    grid.style.display  = 'grid';
 
-    videos.slice(shownCount, shownCount + PAGE_SIZE).forEach(v => {
+    const batch = videos.slice(shownCount, shownCount + PAGE_SIZE);
+    batch.forEach(v => {
       const id    = getVideoId(v.url);
       const short = isShort(v.url);
+      const memberLabel = MEMBERS[v.member]?.label || '';
       const card  = document.createElement('div');
       card.className = 'video-card';
-      card.onclick = () => openOverlay(v);
+      card.onclick   = () => openOverlay(v);
       card.innerHTML = `
         <div class="thumb-wrap">
           <img src="${thumbUrl(id)}" alt="${v.caption}" loading="lazy"
@@ -628,6 +664,7 @@
           <div class="play-icon">▶</div>
           ${short ? '<span class="short-badge">ショート</span>' : ''}
           ${isNew(v.date) ? '<span class="new-badge">🔔 新着</span>' : ''}
+          ${currentMember === 'all' ? `<span class="member-badge">${memberLabel}</span>` : ''}
         </div>
         <div class="card-info">
           <div class="card-date">📅 ${v.date.replace(/-/g,'/')}</div>
@@ -636,7 +673,7 @@
       grid.appendChild(card);
     });
 
-    shownCount += Math.min(PAGE_SIZE, videos.length - shownCount);
+    shownCount += batch.length;
 
     const remaining = videos.length - shownCount;
     if (remaining > 0) {
@@ -649,26 +686,82 @@
 
   function loadMore() { renderGrid(); }
 
+  /* ===== オーバーレイ ===== */
   function openOverlay(v) {
     const id    = getVideoId(v.url);
     const short = isShort(v.url);
     const inner = document.getElementById('overlay-inner');
 
-    document.getElementById('player').src = embedUrl(id);
+    document.getElementById('player').src       = embedUrl(id);
     document.getElementById('ov-date').textContent    = '📅 ' + v.date.replace(/-/g,'/');
     document.getElementById('ov-caption').textContent = v.caption;
 
     short ? inner.classList.add('short') : inner.classList.remove('short');
     document.getElementById('overlay').classList.add('open');
+    // iOS スクロール防止
+    document.body.style.overflow = 'hidden';
   }
 
   function closeOverlay() {
     document.getElementById('overlay').classList.remove('open');
-    document.getElementById('player').src = '';
+    document.getElementById('player').src = ''; // 再生停止
+    document.body.style.overflow = '';
+    // iOS フルスクリーン後にスクロール位置がずれる問題を防止
+    window.scrollTo(0, 0);
   }
 
+  // ESCキー
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
 
+  // フルスクリーン終了時にオーバーレイを維持（iOS対策）
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev => {
+    document.addEventListener(ev, () => {
+      const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!isFS) {
+        const overlay = document.getElementById('overlay');
+        if (overlay.classList.contains('open')) {
+          // 少し待ってからオーバーレイを再表示
+          setTimeout(() => { overlay.style.display = 'flex'; }, 100);
+        }
+      }
+    });
+  });
+
+  /* ===== Pull to Refresh ===== */
+  (function() {
+    const content   = document.getElementById('content');
+    const indicator = document.getElementById('pull-indicator');
+    let startY = 0, pulling = false, threshold = 70;
+
+    content.addEventListener('touchstart', e => {
+      if (content.scrollTop === 0) startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    content.addEventListener('touchmove', e => {
+      if (content.scrollTop > 0 || !startY) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy > 10) {
+        pulling = true;
+        indicator.style.display = 'block';
+        indicator.textContent   = dy > threshold ? '🔄 放して更新！' : '↓ 引っ張って更新';
+      }
+    }, { passive: true });
+
+    content.addEventListener('touchend', e => {
+      if (!pulling) return;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (dy > threshold) {
+        indicator.textContent = '読み込み中...';
+        init().then(() => { indicator.style.display = 'none'; });
+      } else {
+        indicator.style.display = 'none';
+      }
+      pulling = false;
+      startY  = 0;
+    }, { passive: true });
+  })();
+
+  /* ===== 起動 ===== */
   init();
 </script>
 
