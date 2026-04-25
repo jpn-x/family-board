@@ -1,10 +1,10 @@
 {
-  "name": "家族ボード",
-  "short_name": "家族ボード",
+  "name": "近況報告",
+  "short_name": "近況報告",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fdf6ee",
-  "theme_color": "#e07b54",
+  "theme_color": "#f18d00",
   "icons": [
     {
       "src": "icon.png",
