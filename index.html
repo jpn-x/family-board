@@ -2,336 +2,571 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=1280, initial-scale=1.0">
   <title>家族ボード</title>
+  <!-- ファビコン -->
+  <link rel="icon" type="image/png" href="icon.png">
+  <!-- タブレット・スマホのホーム画面アイコン -->
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="manifest.json">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
+    :root {
+      --orange:    #e07b54;
+      --orange-dk: #c96840;
+      --orange-lt: #fff0e8;
+      --red:       #e03b3b;
+      --bg:        #fdf6ee;
+      --card:      #ffffff;
+      --text:      #333;
+      --sub:       #888;
+      --radius:    16px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
       font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
-      background: #fdf6ee;
-      color: #333;
-      min-height: 100vh;
+      color: var(--text);
+      overflow: hidden;
     }
 
-    header {
-      background: #e07b54;
-      color: white;
-      text-align: center;
-      padding: 20px;
-      font-size: 28px;
-      font-weight: bold;
-      letter-spacing: 2px;
-    }
-
-    /* ===== メンバー選択画面 ===== */
-    #home-screen {
-      padding: 30px 20px;
-    }
-
-    #home-screen h2 {
-      text-align: center;
-      font-size: 22px;
-      color: #666;
-      margin-bottom: 30px;
-    }
-
-    .member-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .member-btn {
-      background: white;
-      border: 3px solid #e07b54;
-      border-radius: 20px;
-      padding: 30px 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      position: relative;
-    }
-
-    .member-btn:active {
-      transform: scale(0.97);
-    }
-
-    .member-btn:hover {
-      background: #fff0e8;
-    }
-
-    .member-btn .avatar {
-      font-size: 52px;
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .member-btn .name {
-      font-size: 24px;
-      font-weight: bold;
-      color: #e07b54;
-    }
-
-    .member-btn .badge {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: #e03b3b;
-      color: white;
-      font-size: 13px;
-      font-weight: bold;
-      border-radius: 20px;
-      padding: 3px 10px;
-    }
-
-    /* ===== 動画一覧画面 ===== */
-    #video-screen {
-      display: none;
-      padding: 20px;
-    }
-
-    .back-btn {
-      background: #e07b54;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 24px;
-      font-size: 18px;
-      cursor: pointer;
-      margin-bottom: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .back-btn:hover { background: #c96840; }
-
-    #video-screen h2 {
-      font-size: 26px;
-      color: #e07b54;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
-    .video-list {
-      max-width: 700px;
-      margin: 0 auto;
+    /* ====== 全体レイアウト ====== */
+    #app {
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      height: 100vh;
+    }
+
+    /* ====== ヘッダー ====== */
+    header {
+      flex-shrink: 0;
+      background: var(--orange);
+      color: white;
+      text-align: center;
+      padding: 14px 0 10px;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    /* ====== タブ ====== */
+    #tabs {
+      flex-shrink: 0;
+      display: flex;
+      background: #f0e0d0;
+      border-bottom: 3px solid #dcc0a8;
+      gap: 0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 16px 8px;
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      color: #b07050;
+      border: none;
+      background: transparent;
+      border-bottom: 4px solid transparent;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+      user-select: none;
+    }
+
+    .tab:hover { background: #ffe8d8; }
+
+    .tab.active {
+      background: var(--bg);
+      color: var(--orange);
+      border-bottom: 4px solid var(--orange);
+    }
+
+    .tab .tab-badge {
+      position: absolute;
+      top: 8px; right: 18%;
+      background: var(--red);
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 20px;
+      padding: 1px 7px;
+    }
+
+    .tab .tab-avatar { font-size: 26px; display: block; margin-bottom: 2px; }
+    .tab .tab-name   { font-size: 18px; display: block; }
+
+    /* ====== コンテンツエリア ====== */
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 32px 16px;
+    }
+
+    #content::-webkit-scrollbar       { width: 6px; }
+    #content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+    /* ====== 空状態 ====== */
+    #empty {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--sub);
+      font-size: 22px;
+    }
+
+    #empty .icon { font-size: 64px; }
+
+    /* ====== サムネグリッド ====== */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
 
     .video-card {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.09);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
     }
 
-    .video-card .meta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+    .video-card:hover  { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+    .video-card:active { transform: scale(0.98); }
+
+    /* サムネイル部分 */
+    .thumb-wrap {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 固定 */
+      background: #111;
+      overflow: hidden;
     }
 
-    .video-card .date {
-      font-size: 18px;
-      color: #888;
+    /* ショートは縦長だが、サムネは横にクロップして統一 */
+    .thumb-wrap img {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
-    .video-card .new-badge {
-      background: #e03b3b;
+    /* 再生ボタンアイコン */
+    .thumb-wrap .play-btn {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 54px; height: 54px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
       color: white;
-      font-size: 14px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .video-card:hover .play-btn { opacity: 1; }
+
+    /* ショートバッジ */
+    .short-badge {
+      position: absolute;
+      top: 8px; left: 8px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 2px 7px;
+      letter-spacing: 0.5px;
+    }
+
+    /* 新着バッジ */
+    .new-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: var(--red);
+      color: white;
+      font-size: 11px;
       font-weight: bold;
       border-radius: 20px;
-      padding: 3px 12px;
+      padding: 2px 9px;
     }
 
-    .video-card .caption {
+    /* カード下部テキスト */
+    .card-info {
+      padding: 12px 14px;
+    }
+
+    .card-date    { font-size: 14px; color: var(--sub); margin-bottom: 4px; }
+    .card-caption { font-size: 17px; font-weight: bold; line-height: 1.4; }
+
+    /* ====== もっと見るボタン ====== */
+    #load-more-area {
+      display: none;
+      justify-content: center;
+      padding: 28px 0 8px;
+    }
+
+    #load-more-btn {
+      background: white;
+      border: 3px solid var(--orange);
+      color: var(--orange);
+      border-radius: 50px;
+      padding: 14px 48px;
       font-size: 20px;
       font-weight: bold;
-      margin-bottom: 14px;
-      color: #333;
+      cursor: pointer;
+      transition: background 0.15s;
     }
 
-    .video-embed {
+    #load-more-btn:hover { background: var(--orange-lt); }
+
+    /* ====== オーバーレイ ====== */
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #overlay.open { display: flex; }
+
+    .overlay-inner {
       position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      border-radius: 10px;
-      background: #000;
+      width: 90vw;
+      max-width: 900px;
     }
 
-    .video-embed iframe {
+    /* 縦動画（ショート）の場合 */
+    .overlay-inner.short {
+      width: auto;
+      height: 82vh;
+      max-width: none;
+    }
+
+    .embed-wrap {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 */
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .overlay-inner.short .embed-wrap {
+      padding-bottom: 0;
+      height: 82vh;
+      width: calc(82vh * 9 / 16);
+    }
+
+    .embed-wrap iframe {
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
       border: none;
-      border-radius: 10px;
     }
 
-    /* ===== タブレット向け調整 ===== */
-    @media (max-width: 500px) {
-      header { font-size: 22px; }
-      .member-btn .avatar { font-size: 42px; }
-      .member-btn .name { font-size: 20px; }
+    .overlay-meta {
+      color: white;
+      padding: 12px 4px 0;
+      font-size: 18px;
+    }
+
+    .overlay-meta .ov-date    { font-size: 14px; color: #aaa; margin-bottom: 4px; }
+    .overlay-meta .ov-caption { font-size: 20px; font-weight: bold; }
+
+    #close-btn {
+      position: absolute;
+      top: -44px; right: 0;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 36px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* オーバーレイ外クリックで閉じる */
+    #overlay-bg {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
     }
   </style>
 </head>
 <body>
 
-<header>👨‍👩‍👧‍👦 家族ボード</header>
+<div id="app">
 
-<!-- ホーム画面 -->
-<div id="home-screen">
-  <h2>だれを見る？</h2>
-  <div class="member-grid">
-    <div class="member-btn" onclick="showVideos('musuko')">
-      <span class="avatar">👨</span>
-      <span class="name">息子</span>
-      <span class="badge">新着</span>
+  <!-- ヘッダー -->
+  <header>👨‍👩‍👧‍👦 家族ボード</header>
+
+  <!-- タブ -->
+  <div id="tabs">
+    <button class="tab active" id="tab-musuko" onclick="selectMember('musuko')">
+      <span class="tab-avatar">👨</span>
+      <span class="tab-name">息子</span>
+      <span class="tab-badge" id="badge-musuko" style="display:none">新着</span>
+    </button>
+    <button class="tab" id="tab-musume" onclick="selectMember('musume')">
+      <span class="tab-avatar">👩</span>
+      <span class="tab-name">娘</span>
+      <span class="tab-badge" id="badge-musume" style="display:none">新着</span>
+    </button>
+    <button class="tab" id="tab-mago1" onclick="selectMember('mago1')">
+      <span class="tab-avatar">👦</span>
+      <span class="tab-name">孫１</span>
+      <span class="tab-badge" id="badge-mago1" style="display:none">新着</span>
+    </button>
+    <button class="tab" id="tab-mago2" onclick="selectMember('mago2')">
+      <span class="tab-avatar">👧</span>
+      <span class="tab-name">孫２</span>
+      <span class="tab-badge" id="badge-mago2" style="display:none">新着</span>
+    </button>
+  </div>
+
+  <!-- コンテンツ -->
+  <div id="content">
+    <div id="empty"><div class="icon">🎬</div><span>動画はまだありません</span></div>
+    <div id="grid"></div>
+    <div id="load-more-area">
+      <button id="load-more-btn" onclick="loadMore()">▼ 過去の動画を見る</button>
     </div>
-    <div class="member-btn" onclick="showVideos('musume')">
-      <span class="avatar">👩</span>
-      <span class="name">娘</span>
+  </div>
+
+</div>
+
+<!-- オーバーレイプレーヤー -->
+<div id="overlay">
+  <div id="overlay-bg" onclick="closeOverlay()"></div>
+  <div class="overlay-inner" id="overlay-inner">
+    <button id="close-btn" onclick="closeOverlay()">✕</button>
+    <div class="embed-wrap">
+      <iframe id="player" allowfullscreen></iframe>
     </div>
-    <div class="member-btn" onclick="showVideos('mago1')">
-      <span class="avatar">👦</span>
-      <span class="name">孫１</span>
-      <span class="badge">新着</span>
-    </div>
-    <div class="member-btn" onclick="showVideos('mago2')">
-      <span class="avatar">👧</span>
-      <span class="name">孫２</span>
+    <div class="overlay-meta">
+      <div class="ov-date"    id="ov-date"></div>
+      <div class="ov-caption" id="ov-caption"></div>
     </div>
   </div>
 </div>
 
-<!-- 動画一覧画面 -->
-<div id="video-screen">
-  <button class="back-btn" onclick="goHome()">◀ もどる</button>
-  <h2 id="video-screen-title"></h2>
-  <div class="video-list" id="video-list"></div>
-</div>
-
 <script>
-  // ===== テスト用データ =====
-  // YouTube動画IDを差し替えればOK
-  // "isNew: true" で「新着」バッジが表示される
-  const members = {
-    musuko: {
-      label: '👨 息子',
-      videos: [
-        {
-          date: '2026/4/25',
-          caption: '週末にバーベキューしたよ！',
-          youtubeId: 'dQw4w9WgXcQ', // ← テスト用（差し替えてください）
-          isNew: true
-        },
-        {
-          date: '2026/4/10',
-          caption: '桜がきれいだったから撮った',
-          youtubeId: 'dQw4w9WgXcQ',
-          isNew: false
-        },
-        {
-          date: '2026/3/20',
-          caption: '家の近くに新しいお店ができた',
-          youtubeId: 'dQw4w9WgXcQ',
-          isNew: false
-        }
-      ]
-    },
-    musume: {
-      label: '👩 娘',
-      videos: [
-        {
-          date: '2026/4/18',
-          caption: 'ケーキ作ってみた♪',
-          youtubeId: 'dQw4w9WgXcQ',
-          isNew: false
-        },
-        {
-          date: '2026/3/30',
-          caption: '旅行の様子です',
-          youtubeId: 'dQw4w9WgXcQ',
-          isNew: false
-        }
-      ]
-    },
-    mago1: {
-      label: '👦 孫１',
-      videos: [
-        {
-          date: '2026/4/24',
-          caption: '運動会の徒競走！1位だったよ',
-          youtubeId: 'dQw4w9WgXcQ',
-          isNew: true
-        },
-        {
-          date: '2026/4/5',
-          caption: 'ピアノ発表会',
-          youtubeId: 'dQw4w9WgXcQ',
-          isNew: false
-        }
-      ]
-    },
-    mago2: {
-      label: '👧 孫２',
-      videos: [
-        {
-          date: '2026/4/1',
-          caption: '入学式に行ってきました',
-          youtubeId: 'dQw4w9WgXcQ',
-          isNew: false
-        }
-      ]
-    }
+  /* ===== 設定 ===== */
+  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gbFsjn4STShe0VoNh7OtYcfD-VMZTIoe8xdaXD7XnGw/export?format=csv&gid=327167513';
+
+  const PAGE_SIZE = 6;   // 最初に表示する件数
+  const NEW_DAYS  = 3;   // 何日以内を「新着」とするか
+
+  /* ===== メンバー定義 ===== */
+  const MEMBERS = {
+    musuko: { label: '息子', nameKeys: ['息子', 'musuko'] },
+    musume: { label: '娘',   nameKeys: ['娘',   'musume'] },
+    mago1:  { label: '孫１', nameKeys: ['孫1',  '孫１', 'mago1'] },
+    mago2:  { label: '孫２', nameKeys: ['孫2',  '孫２', 'mago2'] },
   };
 
-  function showVideos(memberId) {
-    const member = members[memberId];
-    document.getElementById('home-screen').style.display = 'none';
-    document.getElementById('video-screen').style.display = 'block';
-    document.getElementById('video-screen-title').textContent = member.label;
+  /* ===== サンプルデータ（Sheet未接続時） ===== */
+  const SAMPLE = [
+    { member:'musuko', date:'2026-04-25', caption:'週末にバーベキューしたよ！', url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { member:'musuko', date:'2026-04-10', caption:'桜がきれいだったから撮った',  url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { member:'musuko', date:'2026-03-20', caption:'家の近くに新しいお店ができた', url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { member:'musume', date:'2026-04-18', caption:'ケーキ作ってみた♪',          url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { member:'musume', date:'2026-03-30', caption:'旅行の様子です',              url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { member:'mago1',  date:'2026-04-24', caption:'運動会の徒競走！1位だったよ', url:'https://www.youtube.com/shorts/dQw4w9WgXcQ' },
+    { member:'mago1',  date:'2026-04-05', caption:'ピアノ発表会',               url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { member:'mago2',  date:'2026-04-01', caption:'入学式に行ってきました',      url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+  ];
 
-    const list = document.getElementById('video-list');
-    list.innerHTML = '';
+  /* ===== ユーティリティ ===== */
+  function getVideoId(url) {
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^?&\s]+)/);
+    return m ? m[1] : null;
+  }
 
-    member.videos.forEach(v => {
+  function isShort(url) {
+    return /youtube\.com\/shorts\//.test(url);
+  }
+
+  function thumbUrl(id) {
+    return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+  }
+
+  function embedUrl(id) {
+    return `https://www.youtube.com/embed/${id}?autoplay=1`;
+  }
+
+  function isNew(dateStr) {
+    const d = new Date(dateStr);
+    return (Date.now() - d.getTime()) < NEW_DAYS * 86400 * 1000;
+  }
+
+  /* ===== データ管理 ===== */
+  let allData = [];
+  let currentMember = 'musuko';
+  let shownCount = 0;
+
+  function getMemberVideos(memberId) {
+    return allData
+      .filter(v => v.member === memberId)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }
+
+  /* ===== CSVパース ===== */
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    lines.shift(); // ヘッダー行を除去
+    return lines.map(line => {
+      // "A","B","C","D" 形式を想定
+      const cols = line.match(/(".*?"|[^,]+)(?=,|$)/g) || [];
+      const clean = s => (s || '').replace(/^"|"$/g, '').trim();
+      const raw = clean(cols[0]); // Timestamp: 2026/04/25 10:30:00
+      const date = raw.substring(0, 10).replace(/\//g, '-'); // → 2026-04-25
+      const nameRaw = clean(cols[1]);
+      const url  = clean(cols[2]);
+      const caption = clean(cols[3]) || '';
+
+      // メンバーIDに変換
+      let member = null;
+      for (const [id, cfg] of Object.entries(MEMBERS)) {
+        if (cfg.nameKeys.some(k => nameRaw.includes(k))) { member = id; break; }
+      }
+      if (!member || !url || !getVideoId(url)) return null;
+      return { member, date, caption, url };
+    }).filter(Boolean);
+  }
+
+  /* ===== 初期化 ===== */
+  async function init() {
+    if (SHEET_CSV_URL) {
+      try {
+        const res = await fetch(SHEET_CSV_URL);
+        const text = await res.text();
+        allData = parseCSV(text);
+      } catch(e) {
+        console.warn('Sheet読み込みエラー:', e);
+        allData = SAMPLE;
+      }
+    } else {
+      allData = SAMPLE;
+    }
+
+    // 新着バッジ更新
+    for (const id of Object.keys(MEMBERS)) {
+      const hasNew = getMemberVideos(id).some(v => isNew(v.date));
+      document.getElementById('badge-' + id).style.display = hasNew ? '' : 'none';
+    }
+
+    selectMember('musuko');
+  }
+
+  /* ===== タブ切り替え ===== */
+  function selectMember(id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    currentMember = id;
+    shownCount = 0;
+    document.getElementById('grid').innerHTML = '';
+    document.getElementById('content').scrollTop = 0;
+    renderGrid();
+  }
+
+  /* ===== グリッド描画 ===== */
+  function renderGrid() {
+    const videos = getMemberVideos(currentMember);
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const moreArea = document.getElementById('load-more-area');
+
+    if (videos.length === 0) {
+      empty.style.display = 'flex';
+      grid.style.display = 'none';
+      moreArea.style.display = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    grid.style.display = 'grid';
+
+    const nextBatch = videos.slice(shownCount, shownCount + PAGE_SIZE);
+    nextBatch.forEach(v => {
+      const id = getVideoId(v.url);
+      const short = isShort(v.url);
       const card = document.createElement('div');
       card.className = 'video-card';
+      card.onclick = () => openOverlay(v);
       card.innerHTML = `
-        <div class="meta">
-          <span class="date">📅 ${v.date}</span>
-          ${v.isNew ? '<span class="new-badge">🔔 新着</span>' : ''}
+        <div class="thumb-wrap">
+          <img src="${thumbUrl(id)}" alt="${v.caption}" loading="lazy"
+               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22180%22><rect fill=%22%23222%22 width=%22320%22 height=%22180%22/><text fill=%22%23888%22 font-size=%2240%22 x=%22160%22 y=%2299%22 text-anchor=%22middle%22>🎬</text></svg>'">
+          <div class="play-btn">▶</div>
+          ${short ? '<span class="short-badge">ショート</span>' : ''}
+          ${isNew(v.date) ? '<span class="new-badge">🔔 新着</span>' : ''}
         </div>
-        <div class="caption">${v.caption}</div>
-        <div class="video-embed">
-          <iframe
-            src="https://www.youtube.com/embed/${v.youtubeId}"
-            allowfullscreen
-            loading="lazy"
-          ></iframe>
+        <div class="card-info">
+          <div class="card-date">📅 ${v.date.replace(/-/g,'/')}</div>
+          <div class="card-caption">${v.caption}</div>
         </div>
       `;
-      list.appendChild(card);
+      grid.appendChild(card);
     });
 
-    window.scrollTo(0, 0);
+    shownCount += nextBatch.length;
+
+    // もっと見るボタン
+    const remaining = videos.length - shownCount;
+    if (remaining > 0) {
+      moreArea.style.display = 'flex';
+      document.getElementById('load-more-btn').textContent =
+        `▼ 過去の動画を見る（あと ${remaining} 件）`;
+    } else {
+      moreArea.style.display = 'none';
+    }
   }
 
-  function goHome() {
-    document.getElementById('video-screen').style.display = 'none';
-    document.getElementById('home-screen').style.display = 'block';
-    window.scrollTo(0, 0);
+  function loadMore() {
+    renderGrid();
   }
+
+  /* ===== オーバーレイ ===== */
+  function openOverlay(v) {
+    const id = getVideoId(v.url);
+    const short = isShort(v.url);
+
+    document.getElementById('player').src = embedUrl(id);
+    document.getElementById('ov-date').textContent = '📅 ' + v.date.replace(/-/g,'/');
+    document.getElementById('ov-caption').textContent = v.caption;
+
+    const inner = document.getElementById('overlay-inner');
+    if (short) inner.classList.add('short');
+    else        inner.classList.remove('short');
+
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closeOverlay() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('player').src = ''; // 再生停止
+  }
+
+  // ESCキーで閉じる
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
+
+  init();
 </script>
 
 </body>
