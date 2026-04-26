@@ -560,6 +560,7 @@
 <script>
   /* ===== 設定 ===== */
   const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gbFsjn4STShe0VoNh7OtYcfD-VMZTIoe8xdaXD7XnGw/export?format=csv&gid=327167513';
+  const META_TOKEN = '890796017340760|3cb9b11c896ce0fa4d4b83836e264249';
   const PAGE_SIZE = 6;
   const NEW_DAYS  = 3;
 
@@ -589,6 +590,17 @@
   function getInstaId(url) {
     const m = url.match(/instagram\.com\/(?:reel|p)\/([^/?#\s]+)/);
     return m ? m[1] : null;
+  }
+  async function fetchInstagramThumb(url, elemId) {
+    try {
+      const api = `https://graph.facebook.com/v18.0/instagram_oembed?url=${encodeURIComponent(url)}&fields=thumbnail_url&access_token=${META_TOKEN}`;
+      const res = await fetch(api);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.thumbnail_url) return;
+      const el = document.getElementById(elemId);
+      if (el) el.outerHTML = `<img src="${data.thumbnail_url}" alt="" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:100%;object-fit:cover">`;
+    } catch(e) { /* プレースホルダーのまま */ }
   }
 
   function isNew(d) { return (Date.now() - new Date(d)) < NEW_DAYS * 86400000; }
@@ -697,8 +709,9 @@
       card.className = 'video-card';
       card.onclick   = () => openOverlay(v);
 
+      const ithumbId = insta ? 'ithumb-' + id : '';
       const thumbHtml = insta
-        ? `<div class="insta-thumb">
+        ? `<div class="insta-thumb" id="${ithumbId}">
              <span class="insta-icon">📸</span>
              <span class="insta-label">Instagram</span>
            </div>`
@@ -719,6 +732,7 @@
           <div class="card-caption">${v.caption}</div>
         </div>`;
       grid.appendChild(card);
+      if (insta) fetchInstagramThumb(v.url, ithumbId);
     });
 
     shownCount += batch.length;
