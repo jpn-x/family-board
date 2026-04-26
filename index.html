@@ -798,8 +798,8 @@
       if (!isFS) {
         const overlay = document.getElementById('overlay');
         if (overlay.classList.contains('open')) {
-          // 少し待ってからオーバーレイを再表示
-          setTimeout(() => { overlay.style.display = 'flex'; }, 100);
+          // インラインスタイルは使わずclassで制御する
+          setTimeout(() => { overlay.classList.add('open'); }, 100);
         }
       }
     });
