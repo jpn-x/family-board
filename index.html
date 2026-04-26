@@ -209,6 +209,36 @@
 
     .video-card:hover .play-icon { opacity: 1; }
 
+    /* Instagram プレースホルダー */
+    .insta-thumb {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .insta-thumb .insta-icon { font-size: 36px; }
+    .insta-thumb .insta-label {
+      color: rgba(255,255,255,0.85);
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    #insta-container {
+      display: none;
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      background: #fff;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
+    }
+    #insta-container.active { display: block; }
+
     .short-badge, .new-badge, .member-badge {
       position: absolute;
       font-size: 10px;
@@ -518,6 +548,7 @@
     <button id="close-btn" onclick="closeOverlay()">✕ 閉じる</button>
     <div class="embed-wrap">
       <iframe id="player" allowfullscreen allow="autoplay; fullscreen"></iframe>
+      <div id="insta-container"></div>
     </div>
     <div class="overlay-meta">
       <div class="ov-date"    id="ov-date"></div>
@@ -543,14 +574,24 @@
   ];
 
   /* ===== ユーティリティ ===== */
+
+  // YouTube
   function getVideoId(url) {
     const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^?&\s]+)/);
     return m ? m[1] : null;
   }
-  function isShort(url) { return /youtube\.com\/shorts\//.test(url); }
-  function thumbUrl(id) { return `https://img.youtube.com/vi/${id}/mqdefault.jpg`; }
-  function embedUrl(id) { return `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1`; }
-  function isNew(d)     { return (Date.now() - new Date(d)) < NEW_DAYS * 86400000; }
+  function isShort(url)  { return /youtube\.com\/shorts\//.test(url); }
+  function thumbUrl(id)  { return `https://img.youtube.com/vi/${id}/mqdefault.jpg`; }
+  function embedUrl(id)  { return `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1`; }
+
+  // Instagram
+  function isInstagram(url) { return /instagram\.com\/(reel|p)\//.test(url); }
+  function getInstaId(url) {
+    const m = url.match(/instagram\.com\/(?:reel|p)\/([^/?#\s]+)/);
+    return m ? m[1] : null;
+  }
+
+  function isNew(d) { return (Date.now() - new Date(d)) < NEW_DAYS * 86400000; }
 
   /* ===== データ ===== */
   let allData = [], currentMember = 'all', shownCount = 0;
@@ -576,7 +617,7 @@
       for (const [id, cfg] of Object.entries(MEMBERS)) {
         if (cfg.nameKeys.some(k => nameRaw.includes(k))) { member = id; break; }
       }
-      if (!member || !url || !getVideoId(url)) return null;
+      if (!member || !url || (!getVideoId(url) && !isInstagram(url))) return null;
       return { member, date, caption, url };
     }).filter(Boolean);
   }
@@ -648,18 +689,28 @@
 
     const batch = videos.slice(shownCount, shownCount + PAGE_SIZE);
     batch.forEach(v => {
-      const id    = getVideoId(v.url);
-      const short = isShort(v.url);
+      const insta = isInstagram(v.url);
+      const id    = insta ? getInstaId(v.url) : getVideoId(v.url);
+      const short = !insta && isShort(v.url);
       const memberLabel = MEMBERS[v.member]?.label || '';
       const card  = document.createElement('div');
       card.className = 'video-card';
       card.onclick   = () => openOverlay(v);
+
+      const thumbHtml = insta
+        ? `<div class="insta-thumb">
+             <span class="insta-icon">📸</span>
+             <span class="insta-label">Instagram</span>
+           </div>`
+        : `<img src="${thumbUrl(id)}" alt="${v.caption}" loading="lazy"
+             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22180%22><rect fill=%22%23222%22 width=%22320%22 height=%22180%22/></svg>'">`;
+
       card.innerHTML = `
         <div class="thumb-wrap">
-          <img src="${thumbUrl(id)}" alt="${v.caption}" loading="lazy"
-            onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22180%22><rect fill=%22%23222%22 width=%22320%22 height=%22180%22/></svg>'">
+          ${thumbHtml}
           <div class="play-icon">▶</div>
-          ${short ? '<span class="short-badge">ショート</span>' : ''}
+          ${insta  ? '<span class="short-badge">リール</span>' : ''}
+          ${short  ? '<span class="short-badge">ショート</span>' : ''}
           ${isNew(v.date) ? '<span class="new-badge">🔔 新着</span>' : ''}
           ${currentMember === 'all' ? `<span class="member-badge">${memberLabel}</span>` : ''}
         </div>
@@ -685,25 +736,41 @@
 
   /* ===== オーバーレイ ===== */
   function openOverlay(v) {
-    const id    = getVideoId(v.url);
-    const short = isShort(v.url);
-    const inner = document.getElementById('overlay-inner');
+    const inner          = document.getElementById('overlay-inner');
+    const player         = document.getElementById('player');
+    const instaContainer = document.getElementById('insta-container');
 
-    document.getElementById('player').src       = embedUrl(id);
     document.getElementById('ov-date').textContent    = '📅 ' + v.date.replace(/-/g,'/');
     document.getElementById('ov-caption').textContent = v.caption;
 
-    short ? inner.classList.add('short') : inner.classList.remove('short');
+    if (isInstagram(v.url)) {
+      const cleanUrl = v.url.split('?')[0].replace(/\/$/, '') + '/';
+      player.src = '';
+      instaContainer.innerHTML = `<blockquote class="instagram-media" data-instgrm-permalink="${cleanUrl}" data-instgrm-version="14" style="margin:8px auto;max-width:540px;width:calc(100% - 16px)"></blockquote>`;
+      instaContainer.classList.add('active');
+      if (window.instgrm) window.instgrm.Embeds.process();
+      inner.classList.add('short');
+    } else {
+      const id    = getVideoId(v.url);
+      const short = isShort(v.url);
+      instaContainer.innerHTML = '';
+      instaContainer.classList.remove('active');
+      player.src = embedUrl(id);
+      short ? inner.classList.add('short') : inner.classList.remove('short');
+    }
+
     document.getElementById('overlay').classList.add('open');
-    // iOS スクロール防止
     document.body.style.overflow = 'hidden';
   }
 
   function closeOverlay() {
     document.getElementById('overlay').classList.remove('open');
-    document.getElementById('player').src = ''; // 再生停止
+    document.getElementById('player').src = '';
+    const instaContainer = document.getElementById('insta-container');
+    instaContainer.innerHTML = '';
+    instaContainer.classList.remove('active');
+    document.getElementById('overlay-inner').classList.remove('short');
     document.body.style.overflow = '';
-    // iOS フルスクリーン後にスクロール位置がずれる問題を防止
     window.scrollTo(0, 0);
   }
 
@@ -789,5 +856,6 @@
   init();
 </script>
 
+<script async defer src="//www.instagram.com/embed.js"></script>
 </body>
 </html>
