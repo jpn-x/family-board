@@ -758,9 +758,25 @@
 
   function isNew(d) { return (Date.now() - new Date(d)) < NEW_DAYS * 86400000; }
 
+  // タイムスタンプをYYYY-MM-DDに正規化（M/D/YYYY形式にも対応）
+  function normalizeDate(raw) {
+    raw = (raw || '').trim();
+    var m;
+    if (/^\d{4}[\/\-]/.test(raw)) {
+      // YYYY/MM/DD HH:MM:SS または YYYY-MM-DD
+      return raw.substring(0, 10).replace(/\//g, '-');
+    } else if ((m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) {
+      // M/D/YYYY HH:MM:SS（Googleスプレッドシート US形式）
+      return m[3] + '-' + m[1].padStart(2,'0') + '-' + m[2].padStart(2,'0');
+    }
+    return raw.substring(0, 10).replace(/\//g, '-');
+  }
+
   function formatDate(dateStr) {
-    const d    = new Date(dateStr + 'T00:00:00');
-    const days = ['日','月','火','水','木','金','土'];
+    if (!dateStr) return '';
+    var d = new Date(dateStr.trim() + 'T00:00:00');
+    if (isNaN(d.getTime())) return dateStr;
+    var days = ['日','月','火','水','木','金','土'];
     return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日(' + days[d.getDay()] + ')';
   }
 
@@ -780,7 +796,7 @@
     return lines.map(line => {
       const cols = line.match(/(".*?"|[^,\n]+)(?=,|$)/g) || [];
       const c = s => (s||'').replace(/^"|"$/g,'').trim();
-      const date    = c(cols[0]).substring(0,10).replace(/\//g,'-');
+      const date    = normalizeDate(c(cols[0]));
       const nameRaw = c(cols[1]);
       const url     = c(cols[2]);
       const caption = c(cols[3]) || '';
