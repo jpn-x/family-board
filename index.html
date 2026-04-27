@@ -510,8 +510,10 @@
       .overlay-inner {
         width: 100vw;
         max-width: 100vw;
+        max-height: calc(100vh - 52px); /* 閉じるボタン分を除いた高さ */
         border-radius: 20px 20px 0 0;
-        overflow: hidden;
+        overflow-y: auto;              /* 縦スクロール可能に */
+        -webkit-overflow-scrolling: touch;
         background: #111;
         padding-bottom: env(safe-area-inset-bottom);
       }
@@ -522,8 +524,8 @@
       }
 
       .overlay-inner.short .embed-wrap {
-        padding-bottom: 177.78%;
-        height: 0;
+        padding-bottom: 0; /* shortモードはautoにしてスクロールに委ねる */
+        height: auto;
         width: 100%;
       }
 
@@ -1084,13 +1086,15 @@
   });
 
   // iOSのPull-to-Refreshをオーバーレイ表示中に防止
+  // overlay-inner内のスクロールは許可、それ以外を止める
   document.addEventListener('touchmove', function(e) {
-    if (document.getElementById('overlay').classList.contains('open')) {
-      // Instagram/Twitter埋め込みなど内部スクロールは許可、ページ全体のスクロールのみ防止
-      if (!e.target.closest('#insta-container, #fb-container, #twitter-container, .overlay-inner')) {
-        e.preventDefault();
-      }
+    if (!document.getElementById('overlay').classList.contains('open')) return;
+    const inner = document.getElementById('overlay-inner');
+    if (inner && inner.contains(e.target)) {
+      // overlay-inner内は通常のスクロールを許可
+      return;
     }
+    e.preventDefault();
   }, { passive: false });
 
   // ESCキー
