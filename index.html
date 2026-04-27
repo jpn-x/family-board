@@ -343,7 +343,7 @@
     .delete-ok-btn:active { opacity: 0.85; }
 
     .card-info    { padding: 10px 14px 14px; }
-    .card-date    { font-size: 15px; color: var(--sub); margin-bottom: 5px; }
+    .card-date    { font-size: 15px; color: var(--text); font-weight: bold; margin-bottom: 5px; }
     .card-caption { font-size: 18px; font-weight: bold; line-height: 1.4; }
 
     /* ====== もっと見るボタン ====== */
@@ -758,6 +758,12 @@
 
   function isNew(d) { return (Date.now() - new Date(d)) < NEW_DAYS * 86400000; }
 
+  function formatDate(dateStr) {
+    const d    = new Date(dateStr + 'T00:00:00');
+    const days = ['日','月','火','水','木','金','土'];
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日(' + days[d.getDay()] + ')';
+  }
+
   /* ===== データ ===== */
   let allData = [], currentMember = 'all', shownCount = 0;
 
@@ -932,7 +938,7 @@
           <button class="delete-btn" title="この投稿を削除">🗑️</button>
         </div>
         <div class="card-info">
-          <div class="card-date">📅 ${v.date.replace(/-/g,'/')}</div>
+          <div class="card-date">${formatDate(v.date)}</div>
           <div class="card-caption">${v.caption}</div>
         </div>`;
       grid.appendChild(card);
