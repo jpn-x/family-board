@@ -524,8 +524,8 @@
       }
 
       .overlay-inner.short .embed-wrap {
-        padding-bottom: 0; /* shortモードはautoにしてスクロールに委ねる */
-        height: auto;
+        padding-bottom: 0;
+        height: 70vh; /* absolute 子要素が潰れないよう高さ確保 */
         width: 100%;
       }
 
@@ -1030,18 +1030,47 @@
       inner.classList.add('short');
     } else if (isFacebook(v.url)) {
       const cleanUrl = v.url.split('?')[0];
-      const tag = isFbVideo(v.url)
-        ? `<div class="fb-video" data-href="${cleanUrl}" data-width="540" data-autoplay="true" data-allowfullscreen="true"></div>`
-        : `<div class="fb-post"  data-href="${cleanUrl}" data-width="540"></div>`;
-      fbContainer.innerHTML = tag;
+      // Facebook Plugins iframe（JS SDK より安定・公開投稿ならドメイン不問で動作）
+      const iframeSrc = isFbVideo(v.url)
+        ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(cleanUrl)}&width=560&autoplay=true&allowfullscreen=true`
+        : `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(cleanUrl)}&width=560&show_text=true`;
+      fbContainer.innerHTML = `
+        <div style="height:100%;display:flex;flex-direction:column;background:#fff">
+          <iframe src="${iframeSrc}"
+            style="flex:1;border:none;overflow:hidden;width:100%;min-height:300px"
+            scrolling="no" frameborder="0" allowfullscreen
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+          <div style="text-align:center;padding:10px 0 8px">
+            <a href="${cleanUrl}" target="_blank" rel="noopener"
+               style="color:#1877f2;font-size:14px;font-weight:bold;text-decoration:none">📘 Facebookで開く ↗</a>
+          </div>
+        </div>`;
       fbContainer.classList.add('active');
-      if (window.FB) window.FB.XFBML.parse();
       inner.classList.add('short');
     } else if (isTwitter(v.url)) {
-      twContainer.innerHTML = `<blockquote class="twitter-tweet" data-lang="ja" data-dnt="true" style="margin:12px auto"><a href="${v.url}"></a></blockquote>`;
+      twContainer.innerHTML = `
+        <div style="height:100%;overflow-y:auto;background:#fff;display:flex;flex-direction:column;align-items:center">
+          <blockquote class="twitter-tweet" data-lang="ja" data-dnt="true" data-theme="light"
+            style="margin:16px auto;max-width:100%"><a href="${v.url}"></a></blockquote>
+          <div style="padding:8px 0 12px">
+            <a href="${v.url}" target="_blank" rel="noopener"
+               style="color:#000;font-size:13px;font-weight:bold;text-decoration:none">𝕏 Xで開く ↗</a>
+          </div>
+        </div>`;
       twContainer.classList.add('active');
-      if (window.twttr && window.twttr.widgets) window.twttr.widgets.load(twContainer);
       inner.classList.add('short');
+      // widgets.js の読み込みタイミングに関わらず確実にレンダリング
+      const _renderTweet = () => {
+        if (window.twttr && window.twttr.widgets) window.twttr.widgets.load(twContainer);
+      };
+      if (window.twttr && window.twttr.widgets) {
+        _renderTweet();
+      } else if (window.twttr && typeof window.twttr.ready === 'function') {
+        window.twttr.ready(_renderTweet);
+      } else {
+        window.twttr = window.twttr || { _e: [] };
+        window.twttr._e.push(_renderTweet);
+      }
     } else {
       const id    = getVideoId(v.url);
       const short = isShort(v.url);
