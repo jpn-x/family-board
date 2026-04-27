@@ -1048,29 +1048,32 @@
       fbContainer.classList.add('active');
       inner.classList.add('short');
     } else if (isTwitter(v.url)) {
+      const _twUrl = v.url;
       twContainer.innerHTML = `
-        <div style="height:100%;overflow-y:auto;background:#fff;display:flex;flex-direction:column;align-items:center">
-          <blockquote class="twitter-tweet" data-lang="ja" data-dnt="true" data-theme="light"
-            style="margin:16px auto;max-width:100%"><a href="${v.url}"></a></blockquote>
-          <div style="padding:8px 0 12px">
-            <a href="${v.url}" target="_blank" rel="noopener"
-               style="color:#000;font-size:13px;font-weight:bold;text-decoration:none">𝕏 Xで開く ↗</a>
+        <div style="height:100%;overflow-y:auto;background:#fff;display:flex;flex-direction:column;align-items:center;padding:16px 8px 12px">
+          <div id="tw-body" style="width:100%;display:flex;flex-direction:column;align-items:center">
+            <div style="color:#888;font-size:14px;padding:32px 0">読み込み中...</div>
           </div>
+          <a href="${_twUrl}" target="_blank" rel="noopener"
+             style="color:#000;font-size:13px;font-weight:bold;text-decoration:none;margin-top:12px">𝕏 Xで開く ↗</a>
         </div>`;
       twContainer.classList.add('active');
       inner.classList.add('short');
-      // widgets.js の読み込みタイミングに関わらず確実にレンダリング
-      const _renderTweet = () => {
-        if (window.twttr && window.twttr.widgets) window.twttr.widgets.load(twContainer);
-      };
-      if (window.twttr && window.twttr.widgets) {
-        _renderTweet();
-      } else if (window.twttr && typeof window.twttr.ready === 'function') {
-        window.twttr.ready(_renderTweet);
-      } else {
-        window.twttr = window.twttr || { _e: [] };
-        window.twttr._e.push(_renderTweet);
-      }
+      // publish.twitter.com/oembed でツイートHTMLを取得（CORS対応・確実）
+      fetch(`https://publish.twitter.com/oembed?url=${encodeURIComponent(_twUrl)}&omit_script=true&lang=ja&dnt=true`)
+        .then(r => r.json())
+        .then(data => {
+          const body = twContainer.querySelector('#tw-body');
+          if (body) body.innerHTML = data.html || '';
+          const _load = () => { if (window.twttr && window.twttr.widgets) window.twttr.widgets.load(twContainer); };
+          if (window.twttr && window.twttr.widgets)              { _load(); }
+          else if (window.twttr && window.twttr.ready)           { window.twttr.ready(_load); }
+          else { window.twttr = window.twttr || { _e: [] }; window.twttr._e.push(_load); }
+        })
+        .catch(() => {
+          const body = twContainer.querySelector('#tw-body');
+          if (body) body.innerHTML = '<div style="color:#888;font-size:13px;padding:20px 0">読み込みに失敗しました</div>';
+        });
     } else {
       const id    = getVideoId(v.url);
       const short = isShort(v.url);
