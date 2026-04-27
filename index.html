@@ -6,7 +6,7 @@
   <title>みんなの近況報告</title>
   <!-- OGP（LINE・SNSシェア時のプレビュー） -->
   <meta property="og:title"       content="みんなの近況報告">
-  <meta property="og:description" content="直樹・奈々・大阪の近況動画をまとめてチェック！">
+  <meta property="og:description" content="みきさん・まりさん・直樹・奈々・大阪の近況動画をまとめてチェック！">
   <meta property="og:image"       content="https://jpn-x.github.io/family-board/ogp.png">
   <meta property="og:url"         content="https://jpn-x.github.io/family-board/">
   <meta property="og:type"        content="website">
@@ -80,8 +80,18 @@
     #tabs {
       flex-shrink: 0;
       display: flex;
+      flex-direction: column;
       background: #f0e0d0;
       border-bottom: 3px solid #dcc0a8;
+    }
+
+    .tab-row {
+      display: flex;
+      width: 100%;
+    }
+
+    .tab-row + .tab-row {
+      border-top: 2px solid #dcc0a8;
     }
 
     .tab {
@@ -491,23 +501,35 @@
     <p id="header-hint">↑ を押すと最初に戻るよ！</p>
   </header>
 
-  <!-- 上タブ（タブレット・PC） -->
+  <!-- 上タブ -->
   <div id="tabs">
-    <button class="tab active" id="tab-all"   onclick="selectMember('all')">
-      <span class="tab-avatar">👀</span><span class="tab-name">全部表示</span>
-    </button>
-    <button class="tab" id="tab-naoki" onclick="selectMember('naoki')">
-      <span class="tab-avatar">👨</span><span class="tab-name">直樹</span>
-      <span class="tab-badge" id="badge-naoki" style="display:none">新着</span>
-    </button>
-    <button class="tab" id="tab-nana" onclick="selectMember('nana')">
-      <span class="tab-avatar">👩</span><span class="tab-name">奈々</span>
-      <span class="tab-badge" id="badge-nana" style="display:none">新着</span>
-    </button>
-    <button class="tab" id="tab-osaka" onclick="selectMember('osaka')">
-      <span class="tab-avatar">🏯</span><span class="tab-name">大阪</span>
-      <span class="tab-badge" id="badge-osaka" style="display:none">新着</span>
-    </button>
+    <div class="tab-row">
+      <button class="tab active" id="tab-all" onclick="selectMember('all')">
+        <span class="tab-avatar">👀</span><span class="tab-name">全部表示</span>
+      </button>
+      <button class="tab" id="tab-miki" onclick="selectMember('miki')">
+        <span class="tab-avatar">🌸</span><span class="tab-name">みきさん</span>
+        <span class="tab-badge" id="badge-miki" style="display:none">新着</span>
+      </button>
+      <button class="tab" id="tab-mari" onclick="selectMember('mari')">
+        <span class="tab-avatar">🌺</span><span class="tab-name">まりさん</span>
+        <span class="tab-badge" id="badge-mari" style="display:none">新着</span>
+      </button>
+    </div>
+    <div class="tab-row">
+      <button class="tab" id="tab-naoki" onclick="selectMember('naoki')">
+        <span class="tab-avatar">👨</span><span class="tab-name">直樹</span>
+        <span class="tab-badge" id="badge-naoki" style="display:none">新着</span>
+      </button>
+      <button class="tab" id="tab-nana" onclick="selectMember('nana')">
+        <span class="tab-avatar">👩</span><span class="tab-name">奈々</span>
+        <span class="tab-badge" id="badge-nana" style="display:none">新着</span>
+      </button>
+      <button class="tab" id="tab-osaka" onclick="selectMember('osaka')">
+        <span class="tab-avatar">🏯</span><span class="tab-name">大阪</span>
+        <span class="tab-badge" id="badge-osaka" style="display:none">新着</span>
+      </button>
+    </div>
   </div>
 
   <!-- コンテンツ -->
@@ -526,6 +548,14 @@
 <div id="bottom-nav">
   <button class="bnav-btn active" id="bnav-all" onclick="selectMember('all')">
     <span class="bnav-avatar">👀</span><span class="bnav-name">全部</span>
+  </button>
+  <button class="bnav-btn" id="bnav-miki" onclick="selectMember('miki')">
+    <span class="bnav-badge" id="bnav-badge-miki" style="display:none">新</span>
+    <span class="bnav-avatar">🌸</span><span class="bnav-name">みき</span>
+  </button>
+  <button class="bnav-btn" id="bnav-mari" onclick="selectMember('mari')">
+    <span class="bnav-badge" id="bnav-badge-mari" style="display:none">新</span>
+    <span class="bnav-avatar">🌺</span><span class="bnav-name">まり</span>
   </button>
   <button class="bnav-btn" id="bnav-naoki" onclick="selectMember('naoki')">
     <span class="bnav-badge" id="bnav-badge-naoki" style="display:none">新</span>
@@ -566,9 +596,11 @@
   const NEW_DAYS  = 3;
 
   const MEMBERS = {
-    naoki: { label: '直樹', nameKeys: ['直樹', '息子', 'naoki'] },
-    nana:  { label: '奈々', nameKeys: ['奈々', '娘',   'nana']  },
-    osaka: { label: '大阪', nameKeys: ['大阪', '孫1',  '孫１', 'osaka'] },
+    miki:  { label: 'みきさん', nameKeys: ['みきさん', 'みき', 'miki'] },
+    mari:  { label: 'まりさん', nameKeys: ['まりさん', 'まり', 'mari'] },
+    naoki: { label: '直樹',    nameKeys: ['直樹', '息子', 'naoki'] },
+    nana:  { label: '奈々',    nameKeys: ['奈々', '娘',   'nana']  },
+    osaka: { label: '大阪',    nameKeys: ['大阪', '孫1',  '孫１', 'osaka'] },
   };
 
   const SAMPLE = [
