@@ -381,6 +381,8 @@
       z-index: 200;
       align-items: center;
       justify-content: center;
+      overscroll-behavior: none; /* スワイプ更新を防止 */
+      touch-action: pan-y;
     }
 
     #overlay.open { display: flex; }
@@ -530,29 +532,34 @@
       .overlay-meta { padding: 12px 16px 8px; }
       .ov-caption   { font-size: 18px; }
 
-      /* スマホ閉じるボタン：画面上部に常時固定表示 */
+      /* スマホ閉じるボタン：画面最上部に完全固定 */
       #close-btn {
-        position: sticky;
+        position: fixed;
         top: 0;
-        z-index: 20;
-        display: block;
+        left: 0;
+        right: 0;
+        z-index: 10010;
+        display: none;
         width: 100%;
         background: #111;
         border: none;
-        border-bottom: 2px solid #444;
+        border-bottom: 2px solid #555;
         border-radius: 0;
         text-align: center;
-        padding: 16px;
+        padding: 14px 16px;
         font-size: 18px;
         font-weight: bold;
         color: white;
         letter-spacing: 2px;
       }
 
-      /* スマホ overlay-inner はスクロール可に */
-      .overlay-inner {
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
+      /* オーバーレイが開いているときだけ閉じるボタンを表示 */
+      #overlay.open ~ * #close-btn,
+      #overlay.open #close-btn { display: block; }
+
+      /* overlay-inner は固定ボタン分だけ上に余白 */
+      #overlay.open .overlay-inner {
+        padding-top: 52px;
       }
     }
 
@@ -1075,6 +1082,16 @@
       closeOverlay();
     }
   });
+
+  // iOSのPull-to-Refreshをオーバーレイ表示中に防止
+  document.addEventListener('touchmove', function(e) {
+    if (document.getElementById('overlay').classList.contains('open')) {
+      // Instagram/Twitter埋め込みなど内部スクロールは許可、ページ全体のスクロールのみ防止
+      if (!e.target.closest('#insta-container, #fb-container, #twitter-container, .overlay-inner')) {
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
 
   // ESCキー
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
