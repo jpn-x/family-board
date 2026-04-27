@@ -261,6 +261,87 @@
     .new-badge    { top: 7px; right: 7px; background: var(--red); color: white; border-radius: 20px; }
     .member-badge { bottom: 7px; left: 7px; background: rgba(224,123,84,0.9); color: white; }
 
+    /* ====== 削除ボタン ====== */
+    .delete-btn {
+      position: absolute;
+      bottom: 7px;
+      right: 7px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.45);
+      border: none;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      transition: background 0.15s, transform 0.1s;
+      line-height: 1;
+    }
+    .delete-btn:hover  { background: rgba(200,40,40,0.85); transform: scale(1.1); }
+    .delete-btn:active { transform: scale(0.95); }
+
+    /* ====== 削除確認ダイアログ ====== */
+    #delete-dialog {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    #delete-dialog.open { display: flex; }
+    .delete-dialog-box {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px 20px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .delete-dialog-icon { font-size: 40px; margin-bottom: 10px; }
+    .delete-dialog-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .delete-dialog-sub {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+    .delete-dialog-btns { display: flex; gap: 10px; }
+    .delete-cancel-btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 50px;
+      border: 2px solid #ddd;
+      background: white;
+      font-size: 16px;
+      font-weight: bold;
+      color: #888;
+      cursor: pointer;
+    }
+    .delete-ok-btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 50px;
+      border: none;
+      background: #e03b3b;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+    }
+    .delete-ok-btn:active { opacity: 0.85; }
+
     .card-info    { padding: 10px 14px 14px; }
     .card-date    { font-size: 15px; color: var(--sub); margin-bottom: 5px; }
     .card-caption { font-size: 18px; font-weight: bold; line-height: 1.4; }
@@ -571,6 +652,19 @@
   </button>
 </div>
 
+<!-- 削除確認ダイアログ -->
+<div id="delete-dialog">
+  <div class="delete-dialog-box">
+    <div class="delete-dialog-icon">🗑️</div>
+    <div class="delete-dialog-title">本当に削除しますか？</div>
+    <div class="delete-dialog-sub">削除すると元に戻せません。<br>この投稿を削除してよいですか？</div>
+    <div class="delete-dialog-btns">
+      <button class="delete-cancel-btn" onclick="closeDeleteDialog()">キャンセル</button>
+      <button class="delete-ok-btn"     onclick="confirmDelete()">削除する</button>
+    </div>
+  </div>
+</div>
+
 <!-- オーバーレイプレーヤー -->
 <div id="overlay">
   <div id="overlay-bg" onclick="closeOverlay()"></div>
@@ -591,7 +685,8 @@
 
 <script>
   /* ===== 設定 ===== */
-  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gbFsjn4STShe0VoNh7OtYcfD-VMZTIoe8xdaXD7XnGw/export?format=csv&gid=327167513';
+  const SHEET_CSV_URL   = 'https://docs.google.com/spreadsheets/d/1gbFsjn4STShe0VoNh7OtYcfD-VMZTIoe8xdaXD7XnGw/export?format=csv&gid=327167513';
+  const FAMILY_DELETE_URL = 'YOUR_WEB_APP_URL_HERE'; // GASデプロイ後に差し替え
   const META_TOKEN = '890796017340760|3cb9b11c896ce0fa4d4b83836e264249';
   const PAGE_SIZE = 6;
   const NEW_DAYS  = 3;
@@ -717,6 +812,38 @@
     }
   }
 
+  /* ===== 削除機能 ===== */
+  let pendingDeleteUrl = null;
+
+  function openDeleteDialog(url, event) {
+    event.stopPropagation();
+    pendingDeleteUrl = url;
+    document.getElementById('delete-dialog').classList.add('open');
+  }
+
+  function closeDeleteDialog() {
+    pendingDeleteUrl = null;
+    document.getElementById('delete-dialog').classList.remove('open');
+  }
+
+  async function confirmDelete() {
+    if (!pendingDeleteUrl) return;
+    const url = pendingDeleteUrl;
+    closeDeleteDialog();
+
+    try {
+      const res  = await fetch(FAMILY_DELETE_URL + '?action=delete&url=' + encodeURIComponent(url));
+      const data = await res.json();
+      if (data.success) {
+        await init();
+      } else {
+        alert('削除できませんでした: ' + (data.message || '不明なエラー'));
+      }
+    } catch(e) {
+      alert('通信エラーが発生しました');
+    }
+  }
+
   /* ===== ホームへ戻る ===== */
   function goHome() {
     selectMember('all');
@@ -798,12 +925,17 @@
           ${tw     ? '<span class="short-badge">ポスト</span>' : ''}
           ${isNew(v.date) ? '<span class="new-badge">🔔 新着</span>' : ''}
           ${currentMember === 'all' ? `<span class="member-badge">${memberLabel}</span>` : ''}
+          <button class="delete-btn" title="この投稿を削除">🗑️</button>
         </div>
         <div class="card-info">
           <div class="card-date">📅 ${v.date.replace(/-/g,'/')}</div>
           <div class="card-caption">${v.caption}</div>
         </div>`;
       grid.appendChild(card);
+      // 削除ボタンのイベント（URLをクロージャで保持）
+      card.querySelector('.delete-btn').addEventListener('click', (function(u) {
+        return function(e) { openDeleteDialog(u, e); };
+      })(v.url));
       if (insta) fetchInstagramThumb(v.url, ithumbId);
       if (fb && ithumbId) fetchFacebookThumb(v.url, ithumbId);
     });
