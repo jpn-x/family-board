@@ -238,7 +238,7 @@
       letter-spacing: 1px;
     }
 
-    #insta-container, #fb-container {
+    #insta-container, #fb-container, #twitter-container {
       display: none;
       position: absolute;
       inset: 0;
@@ -247,7 +247,7 @@
       -webkit-overflow-scrolling: touch;
       border-radius: 12px;
     }
-    #insta-container.active, #fb-container.active { display: block; }
+    #insta-container.active, #fb-container.active, #twitter-container.active { display: block; }
 
     .short-badge, .new-badge, .member-badge {
       position: absolute;
@@ -580,6 +580,7 @@
       <iframe id="player" allowfullscreen allow="autoplay; fullscreen"></iframe>
       <div id="insta-container"></div>
       <div id="fb-container"></div>
+      <div id="twitter-container"></div>
     </div>
     <div class="overlay-meta">
       <div class="ov-date"    id="ov-date"></div>
@@ -617,6 +618,9 @@
   function isShort(url)  { return /youtube\.com\/shorts\//.test(url); }
   function thumbUrl(id)  { return `https://img.youtube.com/vi/${id}/mqdefault.jpg`; }
   function embedUrl(id)  { return `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1`; }
+
+  // X (Twitter)
+  function isTwitter(url) { return /(?:twitter\.com|x\.com)\/\w+\/status\/\d+/.test(url); }
 
   // Facebook
   function isFacebook(url) { return /(?:facebook\.com|fb\.watch)/.test(url); }
@@ -683,7 +687,7 @@
       for (const [id, cfg] of Object.entries(MEMBERS)) {
         if (cfg.nameKeys.some(k => nameRaw.includes(k))) { member = id; break; }
       }
-      if (!member || !url || (!getVideoId(url) && !isInstagram(url) && !isFacebook(url))) return null;
+      if (!member || !url || (!getVideoId(url) && !isInstagram(url) && !isFacebook(url) && !isTwitter(url))) return null;
       return { member, date, caption, url };
     }).filter(Boolean);
   }
@@ -757,14 +761,16 @@
     batch.forEach(v => {
       const insta = isInstagram(v.url);
       const fb    = !insta && isFacebook(v.url);
+      const tw    = !insta && !fb && isTwitter(v.url);
       const id    = insta ? getInstaId(v.url) : getVideoId(v.url);
-      const short = !insta && !fb && isShort(v.url);
+      const short = !insta && !fb && !tw && isShort(v.url);
       const memberLabel = MEMBERS[v.member]?.label || '';
       const card  = document.createElement('div');
       card.className = 'video-card';
       card.onclick   = () => openOverlay(v);
 
-      const ithumbId = insta ? 'ithumb-' + id : fb ? 'fbthumb-' + Math.random().toString(36).slice(2) : '';
+      const rndId    = Math.random().toString(36).slice(2);
+      const ithumbId = insta ? 'ithumb-' + id : (fb || tw) ? 'thumb-' + rndId : '';
       const thumbHtml = insta
         ? `<div class="insta-thumb" id="${ithumbId}">
              <span class="insta-icon">📸</span>
@@ -775,6 +781,11 @@
              <span class="insta-icon">📘</span>
              <span class="insta-label">Facebook</span>
            </div>`
+        : tw
+        ? `<div class="insta-thumb" style="background:#000">
+             <span class="insta-icon" style="font-size:30px;font-weight:900;color:#fff;font-family:serif">𝕏</span>
+             <span class="insta-label">X (Twitter)</span>
+           </div>`
         : `<img src="${thumbUrl(id)}" alt="${v.caption}" loading="lazy"
              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22180%22><rect fill=%22%23222%22 width=%22320%22 height=%22180%22/></svg>'">`;
 
@@ -784,6 +795,7 @@
           <div class="play-icon">▶</div>
           ${insta  ? '<span class="short-badge">リール</span>' : ''}
           ${short  ? '<span class="short-badge">ショート</span>' : ''}
+          ${tw     ? '<span class="short-badge">ポスト</span>' : ''}
           ${isNew(v.date) ? '<span class="new-badge">🔔 新着</span>' : ''}
           ${currentMember === 'all' ? `<span class="member-badge">${memberLabel}</span>` : ''}
         </div>
@@ -815,6 +827,7 @@
     const player         = document.getElementById('player');
     const instaContainer = document.getElementById('insta-container');
     const fbContainer    = document.getElementById('fb-container');
+    const twContainer    = document.getElementById('twitter-container');
 
     document.getElementById('ov-date').textContent    = '📅 ' + v.date.replace(/-/g,'/');
     document.getElementById('ov-caption').textContent = v.caption;
@@ -823,6 +836,7 @@
     player.src = '';
     instaContainer.innerHTML = ''; instaContainer.classList.remove('active');
     fbContainer.innerHTML    = ''; fbContainer.classList.remove('active');
+    twContainer.innerHTML    = ''; twContainer.classList.remove('active');
     inner.classList.remove('short');
 
     if (isInstagram(v.url)) {
@@ -839,6 +853,11 @@
       fbContainer.innerHTML = tag;
       fbContainer.classList.add('active');
       if (window.FB) window.FB.XFBML.parse();
+      inner.classList.add('short');
+    } else if (isTwitter(v.url)) {
+      twContainer.innerHTML = `<blockquote class="twitter-tweet" data-lang="ja" data-dnt="true" style="margin:12px auto"><a href="${v.url}"></a></blockquote>`;
+      twContainer.classList.add('active');
+      if (window.twttr && window.twttr.widgets) window.twttr.widgets.load(twContainer);
       inner.classList.add('short');
     } else {
       const id    = getVideoId(v.url);
@@ -858,6 +877,8 @@
     instaContainer.innerHTML = ''; instaContainer.classList.remove('active');
     const fbContainer = document.getElementById('fb-container');
     fbContainer.innerHTML = ''; fbContainer.classList.remove('active');
+    const twContainer = document.getElementById('twitter-container');
+    twContainer.innerHTML = ''; twContainer.classList.remove('active');
     document.getElementById('overlay-inner').classList.remove('short');
     document.body.style.overflow = '';
     window.scrollTo(0, 0);
@@ -948,5 +969,6 @@
 <script async defer src="//www.instagram.com/embed.js"></script>
 <div id="fb-root"></div>
 <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v18.0"></script>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>
