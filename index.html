@@ -835,7 +835,11 @@
       const res  = await fetch(FAMILY_DELETE_URL + '?action=delete&url=' + encodeURIComponent(url));
       const data = await res.json();
       if (data.success) {
-        await init();
+        // CSVキャッシュを待たずにその場で削除・再描画
+        allData = allData.filter(v => v.url !== url);
+        shownCount = 0;
+        document.getElementById('grid').innerHTML = '';
+        renderGrid();
       } else {
         alert('削除できませんでした: ' + (data.message || '不明なエラー'));
       }
