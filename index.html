@@ -530,13 +530,16 @@
       .overlay-meta { padding: 12px 16px 8px; }
       .ov-caption   { font-size: 18px; }
 
-      /* スマホ閉じるボタン：常に目立つ位置に固定 */
+      /* スマホ閉じるボタン：画面上部に常時固定表示 */
       #close-btn {
-        position: static;
+        position: sticky;
+        top: 0;
+        z-index: 20;
         display: block;
         width: 100%;
-        background: #222;
+        background: #111;
         border: none;
+        border-bottom: 2px solid #444;
         border-radius: 0;
         text-align: center;
         padding: 16px;
@@ -544,6 +547,12 @@
         font-weight: bold;
         color: white;
         letter-spacing: 2px;
+      }
+
+      /* スマホ overlay-inner はスクロール可に */
+      .overlay-inner {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
       }
     }
 
@@ -1033,9 +1042,13 @@
 
     document.getElementById('overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
+    // Androidの「戻る」ボタンで閉じられるようにhistoryを積む
+    history.pushState({ overlay: true }, '');
   }
 
+  let _closingByHistory = false;
   function closeOverlay() {
+    if (!document.getElementById('overlay').classList.contains('open')) return;
     document.getElementById('overlay').classList.remove('open');
     document.getElementById('player').src = '';
     const instaContainer = document.getElementById('insta-container');
@@ -1047,7 +1060,21 @@
     document.getElementById('overlay-inner').classList.remove('short');
     document.body.style.overflow = '';
     window.scrollTo(0, 0);
+    // ボタンで閉じた場合はhistoryも戻す
+    if (!_closingByHistory && history.state && history.state.overlay) {
+      _closingByHistory = true;
+      history.back();
+    }
+    _closingByHistory = false;
   }
+
+  // Androidの「戻る」ボタン / ブラウザバック
+  window.addEventListener('popstate', () => {
+    if (document.getElementById('overlay').classList.contains('open')) {
+      _closingByHistory = true;
+      closeOverlay();
+    }
+  });
 
   // ESCキー
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
