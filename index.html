@@ -261,28 +261,33 @@
     .new-badge    { top: 7px; right: 7px; background: var(--red); color: white; border-radius: 20px; }
     .member-badge { bottom: 7px; left: 7px; background: rgba(224,123,84,0.9); color: white; }
 
+    /* ====== 日付行（日付＋削除ボタン） ====== */
+    .card-date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .card-date { margin-bottom: 0; }
+
     /* ====== 削除ボタン ====== */
     .delete-btn {
-      position: absolute;
-      bottom: 7px;
-      right: 7px;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.45);
-      border: none;
-      color: white;
-      font-size: 15px;
+      background: none;
+      border: 1px solid #e0a0a0;
+      color: #c0392b;
+      font-size: 12px;
+      font-weight: bold;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 3;
-      transition: background 0.15s, transform 0.1s;
-      line-height: 1;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1.4;
+      flex-shrink: 0;
     }
-    .delete-btn:hover  { background: rgba(200,40,40,0.85); transform: scale(1.1); }
-    .delete-btn:active { transform: scale(0.95); }
+    .delete-btn:hover  { background: #fde8e8; border-color: #c0392b; }
+    .delete-btn:active { opacity: 0.75; }
 
     /* ====== 削除確認ダイアログ ====== */
     #delete-dialog {
@@ -951,10 +956,12 @@
           ${tw     ? '<span class="short-badge">ポスト</span>' : ''}
           ${isNew(v.date) ? '<span class="new-badge">🔔 新着</span>' : ''}
           ${currentMember === 'all' ? `<span class="member-badge">${memberLabel}</span>` : ''}
-          <button class="delete-btn" title="この投稿を削除">🗑️</button>
         </div>
         <div class="card-info">
-          <div class="card-date">${formatDate(v.date)}</div>
+          <div class="card-date-row">
+            <div class="card-date">${formatDate(v.date)}</div>
+            <button class="delete-btn">🗑️ 削除</button>
+          </div>
           <div class="card-caption">${v.caption}</div>
         </div>`;
       grid.appendChild(card);
