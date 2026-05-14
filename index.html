@@ -378,34 +378,50 @@
     /* ====== ページネーション ====== */
     .pager {
       display: none;
+      align-items: center;
       justify-content: center;
-      padding: 24px 0 8px;
+      gap: 16px;
+      padding: 20px 16px;
     }
 
     .pager-info {
-      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 120px;
+      background: var(--orange-lt);
+      border: 2px solid rgba(241,141,0,0.35);
+      border-radius: 40px;
+      padding: 10px 22px;
+      font-size: 15px;
       font-weight: bold;
-      color: var(--sub);
-      align-self: center;
-      min-width: 80px;
-      text-align: center;
+      color: var(--orange-dk);
+      letter-spacing: 1.5px;
     }
 
     .pager-btn {
       background: white;
-      border: 3px solid var(--orange);
+      border: 2.5px solid var(--orange);
       color: var(--orange);
       border-radius: 50px;
-      padding: 14px 44px;
-      font-size: 18px;
+      padding: 12px 24px;
+      font-size: 15px;
       font-weight: bold;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
     .pager-btn:hover  { background: var(--orange-lt); }
     .pager-btn:active { transform: scale(0.97); }
-    .pager-btn:disabled { opacity: 0.35; cursor: default; }
+    .pager-btn:disabled { opacity: 0.28; cursor: default; box-shadow: none; }
+
+    @media (max-width: 480px) {
+      .pager        { gap: 10px; padding: 16px 8px; }
+      .pager-btn    { font-size: 13px; padding: 10px 16px; }
+      .pager-info   { font-size: 13px; padding: 8px 14px; min-width: 90px; }
+    }
 
     /* ====== オーバーレイ ====== */
     #overlay {
