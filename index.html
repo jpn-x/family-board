@@ -273,6 +273,74 @@
     }
     #insta-container.active, #fb-container.active, #twitter-container.active { display: block; }
 
+    /* Instagram オーバーレイカード */
+    .insta-overlay-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #fafafa;
+      overflow: hidden;
+    }
+    .insta-thumb-large {
+      flex: 1;
+      min-height: 0;
+      background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .insta-thumb-large .insta-bg-icon {
+      font-size: 72px;
+      opacity: 0.9;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    }
+    .insta-thumb-large .insta-play-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 0; right: 0;
+      text-align: center;
+      color: rgba(255,255,255,0.85);
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .insta-overlay-body {
+      flex-shrink: 0;
+      padding: 16px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border-top: 1px solid #eee;
+    }
+    .insta-overlay-caption {
+      font-size: 15px;
+      color: #333;
+      text-align: center;
+      font-weight: bold;
+      max-width: 480px;
+    }
+    .insta-open-btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #f09433, #dc2743, #bc1888);
+      color: #fff;
+      border-radius: 50px;
+      padding: 14px 36px;
+      font-size: 17px;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 3px 12px rgba(220,39,67,0.35);
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .insta-open-btn:active { opacity: 0.85; transform: scale(0.97); }
+    .insta-open-note {
+      font-size: 12px;
+      color: #aaa;
+    }
+
     .short-badge, .new-badge, .member-badge {
       position: absolute;
       font-size: 10px;
@@ -1132,10 +1200,35 @@
 
     if (isInstagram(v.url)) {
       const cleanUrl = v.url.split('?')[0].replace(/\/$/, '') + '/';
-      instaContainer.innerHTML = `<blockquote class="instagram-media" data-instgrm-permalink="${cleanUrl}" data-instgrm-version="14" style="margin:8px auto;max-width:540px;width:calc(100% - 16px)"></blockquote>`;
+      const rndThumb = 'ith-' + Math.random().toString(36).slice(2);
+      instaContainer.innerHTML = `
+        <div class="insta-overlay-card">
+          <div class="insta-thumb-large" id="${rndThumb}">
+            <span class="insta-bg-icon">📸</span>
+            <span class="insta-play-hint">↓ タップしてInstagramで再生</span>
+          </div>
+          <div class="insta-overlay-body">
+            <div class="insta-overlay-caption">${v.caption || ''}</div>
+            <a href="${cleanUrl}" target="_blank" rel="noopener" class="insta-open-btn">
+              📸 Instagramで開く
+            </a>
+            <span class="insta-open-note">スマホはアプリが開きます</span>
+          </div>
+        </div>`;
       instaContainer.classList.add('active');
-      if (window.instgrm) window.instgrm.Embeds.process();
       inner.classList.add('short');
+      // サムネイル取得（取れたら背景に設定）
+      fetch(`https://graph.facebook.com/v18.0/instagram_oembed?url=${encodeURIComponent(cleanUrl)}&fields=thumbnail_url&access_token=${encodeURIComponent(META_TOKEN)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.thumbnail_url) {
+            const el = document.getElementById(rndThumb);
+            if (el) {
+              el.style.backgroundImage = `url(${data.thumbnail_url})`;
+              el.querySelector('.insta-bg-icon').style.display = 'none';
+            }
+          }
+        }).catch(() => {});
     } else if (isFacebook(v.url)) {
       const cleanUrl = v.url.split('?')[0];
       // Facebook Plugins iframe（JS SDK より安定・公開投稿ならドメイン不問で動作）
