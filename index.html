@@ -962,8 +962,8 @@
       const c = s => (s||'').replace(/^"|"$/g,'').trim();
       const date    = normalizeDate(c(cols[0]));
       const nameRaw = c(cols[1]);
-      const url     = c(cols[2]);
-      const caption = c(cols[3]) || '';
+      const caption = c(cols[2]) || '';
+      const url     = c(cols[3]);
       let member = null;
       for (const [id, cfg] of Object.entries(MEMBERS)) {
         if (cfg.nameKeys.some(k => nameRaw.includes(k))) { member = id; break; }
