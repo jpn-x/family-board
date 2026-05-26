@@ -922,18 +922,24 @@
 
   function isNew(d) { return (Date.now() - new Date(d)) < NEW_DAYS * 86400000; }
 
-  // タイムスタンプをYYYY-MM-DDに正規化（M/D/YYYY形式にも対応）
+  // タイムスタンプをYYYY-MM-DDに正規化（JSTオフセット+9h補正込み）
   function normalizeDate(raw) {
     raw = (raw || '').trim();
-    var m;
-    if (/^\d{4}[\/\-]/.test(raw)) {
-      // YYYY/MM/DD HH:MM:SS または YYYY-MM-DD
+    var m, utcMs;
+    if ((m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})/))) {
+      // M/D/YYYY HH:MM:SS（Googleスプレッドシート US形式 / UTC想定）
+      utcMs = Date.UTC(+m[3], +m[1]-1, +m[2], +m[4], +m[5], +m[6]);
+    } else if ((m = raw.match(/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})(?:\s+(\d{1,2}):(\d{2}):(\d{2}))?/))) {
+      // YYYY-MM-DD または YYYY-MM-DD HH:MM:SS
+      utcMs = Date.UTC(+m[1], +m[2]-1, +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+    } else {
       return raw.substring(0, 10).replace(/\//g, '-');
-    } else if ((m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) {
-      // M/D/YYYY HH:MM:SS（Googleスプレッドシート US形式）
-      return m[3] + '-' + m[1].padStart(2,'0') + '-' + m[2].padStart(2,'0');
     }
-    return raw.substring(0, 10).replace(/\//g, '-');
+    // UTC → JST (+9時間)
+    var jst = new Date(utcMs + 9 * 3600 * 1000);
+    return jst.getFullYear() + '-'
+      + String(jst.getMonth()+1).padStart(2,'0') + '-'
+      + String(jst.getDate()).padStart(2,'0');
   }
 
   function formatDate(dateStr) {
